@@ -70,6 +70,38 @@ examples:
 
 More examples are generated in `dist/dashboard-card-examples.yaml`.
 
+## Using Button-Card Templates
+
+Cards such as `battery_info`, `card_light`, and `card_room` are not standalone custom cards. They are `custom:button-card` templates and must be present under the dashboard root `button_card_templates:` key before any card can use them.
+
+If you see an error like this:
+
+```text
+Button-card template 'battery_info' is missing!
+```
+
+paste the generated template bundle into the dashboard raw configuration first:
+
+```yaml
+button_card_templates:
+  # paste the contents of dist/button-card-templates.yaml here, indented two spaces
+```
+
+Or paste the ready-made generated root block from:
+
+```text
+dist/ui-raw-dashboard-snippet.yaml
+```
+
+After that, a template card can be added under a view's `cards:` list:
+
+```yaml
+type: custom:button-card
+template: battery_info
+entity: sensor.phone_battery
+variables: {}
+```
+
 ## Updating From Upstream
 
 From this repository:

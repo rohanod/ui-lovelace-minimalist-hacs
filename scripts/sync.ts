@@ -324,7 +324,11 @@ console.info("UI Lovelace Minimalist HACS loaded");
 }
 
 function dashboardCardExamples(): string {
-  return `# Basic status card
+  return `# These examples are for the helper dashboard card itself.
+# Button-card templates such as battery_info still require the generated
+# button_card_templates block from dist/ui-raw-dashboard-snippet.yaml.
+
+# Basic status card
 type: custom:ui-lovelace-minimalist-hacs
 
 ---
