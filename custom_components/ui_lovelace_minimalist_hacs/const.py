@@ -1,3 +1,5 @@
 DOMAIN = "ui_lovelace_minimalist_hacs"
 NAME = "UI Lovelace Minimalist HACS"
 GENERATED_PATH = "generated"
+RESOURCE_ROOT = f"/{DOMAIN}"
+RESOURCE_URL = f"{RESOURCE_ROOT}/ui-lovelace-minimalist-hacs.js"

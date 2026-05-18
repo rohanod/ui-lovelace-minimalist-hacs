@@ -10,6 +10,7 @@ Use the HACS `Integration` category for the full helper integration. The reposit
 
 - A HACS-compatible Home Assistant integration: `custom_components/ui_lovelace_minimalist_hacs`.
 - A HACS-compatible dashboard plugin entrypoint: `dist/ui-lovelace-minimalist-hacs.js`.
+- Automatic frontend resource registration for `type: custom:ui-lovelace-minimalist-hacs` when the integration is configured.
 - Generated template bundles in `dist/`.
 - One YAML snippet per usable card/chip template in `dist/example-card-snippets/`.
 - A Bun sync script that can regenerate this repo from upstream or from a local checkout.
@@ -19,9 +20,10 @@ Use the HACS `Integration` category for the full helper integration. The reposit
 1. Add this repository to HACS as a custom repository with category `Integration`.
 2. Install `UI Lovelace Minimalist HACS`.
 3. Restart Home Assistant.
-4. Add the integration from Settings -> Devices & services.
-5. Open any dashboard, use the raw configuration editor, and paste the contents of `dist/ui-raw-dashboard-snippet.yaml` at the dashboard root.
-6. Add cards from `dist/example-card-snippets/` and edit them in the UI raw editor.
+4. Add the integration from Settings -> Devices & services. This automatically registers the dashboard helper card resource.
+5. Add the helper card directly with `type: custom:ui-lovelace-minimalist-hacs`.
+6. To use generated Minimalist `custom:button-card` templates, open any dashboard raw configuration editor and paste the contents of `dist/ui-raw-dashboard-snippet.yaml` at the dashboard root.
+7. Add cards from `dist/example-card-snippets/` and edit them in the UI raw editor.
 
 The generated cards assume you have the runtime dependencies installed, especially `custom:button-card` and any optional cards used by a given template.
 
@@ -73,6 +75,8 @@ More examples are generated in `dist/dashboard-card-examples.yaml`.
 ## Using Button-Card Templates
 
 Cards such as `battery_info`, `card_light`, and `card_room` are not standalone custom cards. They are `custom:button-card` templates and must be present under the dashboard root `button_card_templates:` key before any card can use them.
+
+The integration can register frontend JavaScript resources automatically, but `custom:button-card` itself resolves templates from the active dashboard configuration. That means template cards still need the generated root `button_card_templates:` block in each dashboard that uses them.
 
 If you see an error like this:
 
