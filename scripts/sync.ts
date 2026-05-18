@@ -1,6 +1,6 @@
-import { mkdtemp, readdir, readFile, rm, stat, writeFile, mkdir, copyFile } from "node:fs/promises";
+import { mkdtemp, readdir, readFile, rm, writeFile, mkdir, copyFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
-import { basename, dirname, join, relative } from "node:path";
+import { dirname, join, relative } from "node:path";
 import { tmpdir } from "node:os";
 
 const repoRoot = join(import.meta.dir, "..");
@@ -9,6 +9,7 @@ const integrationDomain = "ui_lovelace_minimalist_hacs";
 const integrationDir = join(repoRoot, "custom_components", integrationDomain);
 const generatedDir = join(integrationDir, "generated");
 const distDir = join(repoRoot, "dist");
+const pluginFileName = "ui-lovelace-minimalist-hacs.js";
 
 type TemplateEntry = {
   name: string;
@@ -198,6 +199,58 @@ async function writeGeneratedIntegration(sourceRepo: string, entries: TemplateEn
   }, null, 2)}\n`);
 }
 
+function pluginEntrypoint(templateCount: number): string {
+  return [
+    "class UiLovelaceMinimalistHacs extends HTMLElement {",
+    "  setConfig(config) {",
+    "    this.config = config;",
+    "  }",
+    "",
+    "  set hass(hass) {",
+    "    this._hass = hass;",
+    "    this.render();",
+    "  }",
+    "",
+    "  render() {",
+    "    const root = this.shadowRoot ?? this.attachShadow({ mode: \"open\" });",
+    "    root.innerHTML = `",
+    "      <ha-card>",
+    "        <div class=\"content\">",
+    "          <h1>UI Lovelace Minimalist HACS</h1>",
+    `          <p>${templateCount} generated button-card templates are bundled with this repository.</p>`,
+    "          <p>Use the YAML snippets from <code>dist/example-card-snippets</code> or paste <code>dist/ui-raw-dashboard-snippet.yaml</code> into a dashboard raw editor.</p>",
+    "        </div>",
+    "      </ha-card>",
+    "      <style>",
+    "        ha-card { padding: 16px; }",
+    "        .content { display: grid; gap: 8px; }",
+    "        h1 { font-size: 18px; margin: 0; }",
+    "        p { margin: 0; }",
+    "      </style>",
+    "    `;",
+    "  }",
+    "",
+    "  getCardSize() {",
+    "    return 2;",
+    "  }",
+    "}",
+    "",
+    "if (!customElements.get(\"ui-lovelace-minimalist-hacs\")) {",
+    "  customElements.define(\"ui-lovelace-minimalist-hacs\", UiLovelaceMinimalistHacs);",
+    "}",
+    "",
+    "window.customCards = window.customCards || [];",
+    "window.customCards.push({",
+    "  type: \"ui-lovelace-minimalist-hacs\",",
+    "  name: \"UI Lovelace Minimalist HACS\",",
+    "  description: \"Helper card for the generated UI Lovelace Minimalist template bundle.\"",
+    "});",
+    "",
+    "console.info(\"UI Lovelace Minimalist HACS loaded\");",
+    "",
+  ].join("\n");
+}
+
 async function resolveSource(): Promise<{ path: string; label: string; cleanup?: string }> {
   const source = argValue("--source");
   if (source) {
@@ -258,6 +311,8 @@ async function main() {
     await writeFile(join(generatedDir, "ui-raw-dashboard-snippet.yaml"), `button_card_templates:\n${bundle.split("\n").map((line) => line ? `  ${line}` : line).join("\n")}`);
     await writeFile(join(distDir, "template-index.json"), `${JSON.stringify(entries, null, 2)}\n`);
     await writeFile(join(generatedDir, "template-index.json"), `${JSON.stringify(entries, null, 2)}\n`);
+    await writeFile(join(distDir, pluginFileName), pluginEntrypoint(entries.length));
+    await writeFile(join(generatedDir, pluginFileName), pluginEntrypoint(entries.length));
 
     const snippetDir = join(distDir, "example-card-snippets");
     const generatedSnippetDir = join(generatedDir, "example-card-snippets");

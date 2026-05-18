@@ -10,8 +10,10 @@ const required = [
   "custom_components/ui_lovelace_minimalist_hacs/config_flow.py",
   "custom_components/ui_lovelace_minimalist_hacs/generated/button-card-templates.yaml",
   "custom_components/ui_lovelace_minimalist_hacs/generated/ui-raw-dashboard-snippet.yaml",
+  "custom_components/ui_lovelace_minimalist_hacs/generated/ui-lovelace-minimalist-hacs.js",
   "dist/button-card-templates.yaml",
   "dist/ui-raw-dashboard-snippet.yaml",
+  "dist/ui-lovelace-minimalist-hacs.js",
   "dist/template-index.json",
 ];
 
