@@ -11,9 +11,11 @@ const required = [
   "custom_components/ui_lovelace_minimalist_hacs/generated/button-card-templates.yaml",
   "custom_components/ui_lovelace_minimalist_hacs/generated/ui-raw-dashboard-snippet.yaml",
   "custom_components/ui_lovelace_minimalist_hacs/generated/ui-lovelace-minimalist-hacs.js",
+  "custom_components/ui_lovelace_minimalist_hacs/generated/dashboard-card-examples.yaml",
   "dist/button-card-templates.yaml",
   "dist/ui-raw-dashboard-snippet.yaml",
   "dist/ui-lovelace-minimalist-hacs.js",
+  "dist/dashboard-card-examples.yaml",
   "dist/template-index.json",
 ];
 

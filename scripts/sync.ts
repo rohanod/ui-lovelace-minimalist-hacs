@@ -10,6 +10,7 @@ const integrationDir = join(repoRoot, "custom_components", integrationDomain);
 const generatedDir = join(integrationDir, "generated");
 const distDir = join(repoRoot, "dist");
 const pluginFileName = "ui-lovelace-minimalist-hacs.js";
+const dashboardExamplesFileName = "dashboard-card-examples.yaml";
 
 type TemplateEntry = {
   name: string;
@@ -200,55 +201,175 @@ async function writeGeneratedIntegration(sourceRepo: string, entries: TemplateEn
 }
 
 function pluginEntrypoint(templateCount: number): string {
-  return [
-    "class UiLovelaceMinimalistHacs extends HTMLElement {",
-    "  setConfig(config) {",
-    "    this.config = config;",
-    "  }",
-    "",
-    "  set hass(hass) {",
-    "    this._hass = hass;",
-    "    this.render();",
-    "  }",
-    "",
-    "  render() {",
-    "    const root = this.shadowRoot ?? this.attachShadow({ mode: \"open\" });",
-    "    root.innerHTML = `",
-    "      <ha-card>",
-    "        <div class=\"content\">",
-    "          <h1>UI Lovelace Minimalist HACS</h1>",
-    `          <p>${templateCount} generated button-card templates are bundled with this repository.</p>`,
-    "          <p>Use the YAML snippets from <code>dist/example-card-snippets</code> or paste <code>dist/ui-raw-dashboard-snippet.yaml</code> into a dashboard raw editor.</p>",
-    "        </div>",
-    "      </ha-card>",
-    "      <style>",
-    "        ha-card { padding: 16px; }",
-    "        .content { display: grid; gap: 8px; }",
-    "        h1 { font-size: 18px; margin: 0; }",
-    "        p { margin: 0; }",
-    "      </style>",
-    "    `;",
-    "  }",
-    "",
-    "  getCardSize() {",
-    "    return 2;",
-    "  }",
-    "}",
-    "",
-    "if (!customElements.get(\"ui-lovelace-minimalist-hacs\")) {",
-    "  customElements.define(\"ui-lovelace-minimalist-hacs\", UiLovelaceMinimalistHacs);",
-    "}",
-    "",
-    "window.customCards = window.customCards || [];",
-    "window.customCards.push({",
-    "  type: \"ui-lovelace-minimalist-hacs\",",
-    "  name: \"UI Lovelace Minimalist HACS\",",
-    "  description: \"Helper card for the generated UI Lovelace Minimalist template bundle.\"",
-    "});",
-    "",
-    "console.info(\"UI Lovelace Minimalist HACS loaded\");",
-    "",
-  ].join("\n");
+  return `const TEMPLATE_COUNT = ${templateCount};
+
+const DEFAULT_TEMPLATES = [
+  "card_light",
+  "card_room",
+  "card_person",
+  "card_media_player",
+  "card_power_outlet",
+  "card_weather",
+  "chip_icon_state",
+  "chip_temperature"
+];
+
+const DEFAULT_EXAMPLES = [
+  {
+    title: "Light",
+    yaml: "type: custom:button-card\\ntemplate: card_light\\nentity: light.living_room\\nvariables:\\n  ulm_card_light_enable_slider: true"
+  },
+  {
+    title: "Room",
+    yaml: "type: custom:button-card\\ntemplate: card_room\\nname: Living Room\\nentity: light.living_room\\nvariables:\\n  label_use_brightness: true"
+  },
+  {
+    title: "Person",
+    yaml: "type: custom:button-card\\ntemplate: card_person\\nentity: person.rohan\\nvariables: {}"
+  }
+];
+
+const escapeHtml = (value) => String(value ?? "")
+  .replaceAll("&", "&amp;")
+  .replaceAll("<", "&lt;")
+  .replaceAll(">", "&gt;")
+  .replaceAll('"', "&quot;")
+  .replaceAll("'", "&#39;");
+
+class UiLovelaceMinimalistHacs extends HTMLElement {
+  setConfig(config) {
+    this.config = config || {};
+  }
+
+  set hass(hass) {
+    this._hass = hass;
+    this.render();
+  }
+
+  renderTemplateList(templates) {
+    return [
+      "<div class=\\"template-grid\\">",
+      ...templates.map((template) => "<code>" + escapeHtml(template) + "</code>"),
+      "</div>"
+    ].join("");
+  }
+
+  renderExamples(examples) {
+    return examples.map((example) => [
+      "<section class=\\"example\\">",
+      "<h2>" + escapeHtml(example.title || "Example") + "</h2>",
+      "<pre><code>" + escapeHtml(example.yaml || "") + "</code></pre>",
+      "</section>"
+    ].join("")).join("");
+  }
+
+  render() {
+    const root = this.shadowRoot ?? this.attachShadow({ mode: "open" });
+    const config = this.config || {};
+    const mode = config.mode || "summary";
+    const templates = Array.isArray(config.templates) && config.templates.length ? config.templates : DEFAULT_TEMPLATES;
+    const examples = Array.isArray(config.examples) && config.examples.length ? config.examples : DEFAULT_EXAMPLES;
+    const title = config.title || "UI Lovelace Minimalist HACS";
+    const description = config.description || TEMPLATE_COUNT + " generated button-card templates are installed.";
+    const body = mode === "templates"
+      ? this.renderTemplateList(templates)
+      : mode === "examples"
+        ? this.renderExamples(examples)
+        : [
+            "<p>" + escapeHtml(description) + "</p>",
+            this.renderTemplateList(templates.slice(0, 8))
+          ].join("");
+
+    root.innerHTML = [
+      "<ha-card>",
+      "<div class=\\"content\\">",
+      "<h1>" + escapeHtml(title) + "</h1>",
+      body,
+      "</div>",
+      "</ha-card>",
+      "<style>",
+      "ha-card { padding: 16px; }",
+      ".content { display: grid; gap: 12px; }",
+      "h1 { font-size: 18px; margin: 0; }",
+      "h2 { font-size: 14px; margin: 0; }",
+      "p { margin: 0; color: var(--secondary-text-color); }",
+      ".template-grid { display: flex; flex-wrap: wrap; gap: 8px; }",
+      "code { background: var(--code-editor-background-color, rgba(127,127,127,0.14)); border-radius: 6px; padding: 3px 6px; }",
+      "pre { overflow-x: auto; margin: 0; padding: 10px; background: var(--code-editor-background-color, rgba(127,127,127,0.14)); border-radius: 8px; }",
+      "pre code { background: transparent; padding: 0; white-space: pre; }",
+      ".example { display: grid; gap: 6px; }",
+      "</style>"
+    ].join("");
+  }
+
+  getCardSize() {
+    const mode = this.config?.mode || "summary";
+    return mode === "examples" ? 5 : 2;
+  }
+}
+
+if (!customElements.get("ui-lovelace-minimalist-hacs")) {
+  customElements.define("ui-lovelace-minimalist-hacs", UiLovelaceMinimalistHacs);
+}
+
+window.customCards = window.customCards || [];
+window.customCards.push({
+  type: "ui-lovelace-minimalist-hacs",
+  name: "UI Lovelace Minimalist HACS",
+  description: "Shows installed Minimalist template examples and quick reference."
+});
+
+console.info("UI Lovelace Minimalist HACS loaded");
+`;
+}
+
+function dashboardCardExamples(): string {
+  return `# Basic status card
+type: custom:ui-lovelace-minimalist-hacs
+
+---
+# Show a curated list of installed templates
+type: custom:ui-lovelace-minimalist-hacs
+title: Minimalist templates
+mode: templates
+templates:
+  - card_light
+  - card_room
+  - card_person
+  - card_media_player
+  - card_power_outlet
+  - card_weather
+  - chip_icon_state
+  - chip_temperature
+
+---
+# Show pasteable card examples on the dashboard
+type: custom:ui-lovelace-minimalist-hacs
+title: Minimalist examples
+mode: examples
+examples:
+  - title: Dimmable light
+    yaml: |
+      type: custom:button-card
+      template: card_light
+      entity: light.living_room
+      variables:
+        ulm_card_light_enable_slider: true
+  - title: Room
+    yaml: |
+      type: custom:button-card
+      template: card_room
+      name: Living Room
+      entity: light.living_room
+      variables:
+        label_use_brightness: true
+  - title: Person
+    yaml: |
+      type: custom:button-card
+      template: card_person
+      entity: person.rohan
+      variables: {}
+`;
 }
 
 async function resolveSource(): Promise<{ path: string; label: string; cleanup?: string }> {
@@ -313,6 +434,8 @@ async function main() {
     await writeFile(join(generatedDir, "template-index.json"), `${JSON.stringify(entries, null, 2)}\n`);
     await writeFile(join(distDir, pluginFileName), pluginEntrypoint(entries.length));
     await writeFile(join(generatedDir, pluginFileName), pluginEntrypoint(entries.length));
+    await writeFile(join(distDir, dashboardExamplesFileName), dashboardCardExamples());
+    await writeFile(join(generatedDir, dashboardExamplesFileName), dashboardCardExamples());
 
     const snippetDir = join(distDir, "example-card-snippets");
     const generatedSnippetDir = join(generatedDir, "example-card-snippets");

@@ -27,6 +27,49 @@ The generated cards assume you have the runtime dependencies installed, especial
 
 Do not add this repository as HACS category `Template`; HACS templates are `.jinja` files and this project distributes Lovelace/button-card YAML templates.
 
+## Dashboard Helper Card
+
+You can add the helper card directly to a dashboard:
+
+```yaml
+type: custom:ui-lovelace-minimalist-hacs
+```
+
+Template list mode:
+
+```yaml
+type: custom:ui-lovelace-minimalist-hacs
+title: Minimalist templates
+mode: templates
+templates:
+  - card_light
+  - card_room
+  - card_person
+  - card_media_player
+  - card_power_outlet
+  - card_weather
+  - chip_icon_state
+  - chip_temperature
+```
+
+Example mode:
+
+```yaml
+type: custom:ui-lovelace-minimalist-hacs
+title: Minimalist examples
+mode: examples
+examples:
+  - title: Dimmable light
+    yaml: |
+      type: custom:button-card
+      template: card_light
+      entity: light.living_room
+      variables:
+        ulm_card_light_enable_slider: true
+```
+
+More examples are generated in `dist/dashboard-card-examples.yaml`.
+
 ## Updating From Upstream
 
 From this repository:
@@ -47,6 +90,7 @@ The sync process clones or reads the source repository, extracts templates and c
 
 - `dist/button-card-templates.yaml`: all core and community template definitions.
 - `dist/ui-lovelace-minimalist-hacs.js`: HACS dashboard plugin entrypoint.
+- `dist/dashboard-card-examples.yaml`: pasteable examples for `type: custom:ui-lovelace-minimalist-hacs`.
 - `dist/ui-raw-dashboard-snippet.yaml`: paste this into a UI-managed dashboard raw config.
 - `dist/template-index.json`: generated metadata for available templates.
 - `dist/example-card-snippets/*.yaml`: starter cards you can paste into dashboards.
