@@ -1,0 +1,4 @@
+type: custom:button-card
+template: card_esh_welcome_title
+entity: sensor.example
+variables: {}

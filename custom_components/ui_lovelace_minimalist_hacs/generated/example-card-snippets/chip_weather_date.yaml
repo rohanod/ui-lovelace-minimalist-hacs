@@ -1,0 +1,4 @@
+type: custom:button-card
+template: chip_weather_date
+entity: weather.example
+variables: {}

@@ -1,0 +1,4 @@
+type: custom:button-card
+template: custom_template_saxel_blue
+entity: sensor.example
+variables: {}

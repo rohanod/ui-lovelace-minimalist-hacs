@@ -1,0 +1,4 @@
+type: custom:button-card
+template: chip_icon_state
+entity: sensor.example
+variables: {}

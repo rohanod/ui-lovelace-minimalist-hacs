@@ -1,0 +1,4 @@
+type: custom:button-card
+template: custom_card_drealine_roomview
+entity: sensor.example
+variables: {}

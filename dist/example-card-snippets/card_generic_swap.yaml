@@ -1,0 +1,4 @@
+type: custom:button-card
+template: card_generic_swap
+entity: sensor.example
+variables: {}

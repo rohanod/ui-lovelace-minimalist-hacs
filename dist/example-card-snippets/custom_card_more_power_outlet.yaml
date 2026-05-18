@@ -1,0 +1,4 @@
+type: custom:button-card
+template: custom_card_more_power_outlet
+entity: sensor.example_power
+variables: {}

@@ -1,0 +1,4 @@
+type: custom:button-card
+template: custom_widget_nik_tablet
+entity: sensor.example
+variables: {}

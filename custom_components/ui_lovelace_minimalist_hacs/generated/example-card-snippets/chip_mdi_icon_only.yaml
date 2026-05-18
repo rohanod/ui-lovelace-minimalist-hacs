@@ -1,0 +1,4 @@
+type: custom:button-card
+template: chip_mdi_icon_only
+entity: sensor.example
+variables: {}

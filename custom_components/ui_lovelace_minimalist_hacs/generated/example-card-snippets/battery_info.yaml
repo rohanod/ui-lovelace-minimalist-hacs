@@ -1,0 +1,4 @@
+type: custom:button-card
+template: battery_info
+entity: sensor.example_battery
+variables: {}

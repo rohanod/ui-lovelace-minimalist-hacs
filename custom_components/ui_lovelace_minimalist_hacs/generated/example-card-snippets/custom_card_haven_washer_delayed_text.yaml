@@ -1,0 +1,4 @@
+type: custom:button-card
+template: custom_card_haven_washer_delayed_text
+entity: sensor.example
+variables: {}

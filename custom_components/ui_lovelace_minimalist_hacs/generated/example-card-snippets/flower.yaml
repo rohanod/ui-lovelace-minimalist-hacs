@@ -1,0 +1,4 @@
+type: custom:button-card
+template: flower
+entity: sensor.example
+variables: {}

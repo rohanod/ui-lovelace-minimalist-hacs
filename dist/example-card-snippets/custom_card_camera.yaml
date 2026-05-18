@@ -1,0 +1,4 @@
+type: custom:button-card
+template: custom_card_camera
+entity: sensor.example
+variables: {}

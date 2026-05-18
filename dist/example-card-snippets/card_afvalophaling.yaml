@@ -1,0 +1,4 @@
+type: custom:button-card
+template: card_afvalophaling
+entity: sensor.example
+variables: {}

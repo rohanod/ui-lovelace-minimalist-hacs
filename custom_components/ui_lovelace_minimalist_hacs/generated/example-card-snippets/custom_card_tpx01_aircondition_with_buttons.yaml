@@ -1,0 +1,4 @@
+type: custom:button-card
+template: custom_card_tpx01_aircondition_with_buttons
+entity: sensor.example
+variables: {}

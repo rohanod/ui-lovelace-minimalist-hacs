@@ -1,0 +1,24 @@
+{
+  "name": "ui-lovelace-minimalist-hacs",
+  "version": "1.0.0",
+  "description": "Generated HACS-friendly package for UI Lovelace Minimalist button-card templates.",
+  "main": "scripts/sync.ts",
+  "scripts": {
+    "sync": "bun scripts/sync.ts",
+    "sync:local": "bun scripts/sync.ts --source ../UI-Lovelace-Minimalist",
+    "check": "bun scripts/check.ts"
+  },
+  "keywords": [
+    "home-assistant",
+    "hacs",
+    "lovelace",
+    "button-card",
+    "ui-lovelace-minimalist"
+  ],
+  "author": "",
+  "license": "Apache-2.0",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}

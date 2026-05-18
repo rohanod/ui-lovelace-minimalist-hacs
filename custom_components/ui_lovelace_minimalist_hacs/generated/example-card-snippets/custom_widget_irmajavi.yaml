@@ -1,0 +1,4 @@
+type: custom:button-card
+template: custom_widget_irmajavi
+entity: sensor.example
+variables: {}

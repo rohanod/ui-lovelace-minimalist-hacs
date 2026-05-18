@@ -1,0 +1,4 @@
+type: custom:button-card
+template: chip_presence_detection
+entity: sensor.example
+variables: {}

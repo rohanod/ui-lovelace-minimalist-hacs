@@ -1,0 +1,4 @@
+type: custom:button-card
+template: card_media_player
+entity: media_player.example
+variables: {}

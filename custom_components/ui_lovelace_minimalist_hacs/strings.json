@@ -1,0 +1,11 @@
+{
+  "title": "UI Lovelace Minimalist HACS",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Install generated Minimalist dashboard assets",
+        "description": "This helper copies generated YAML templates and snippets into www/community/ui_lovelace_minimalist_hacs."
+      }
+    }
+  }
+}

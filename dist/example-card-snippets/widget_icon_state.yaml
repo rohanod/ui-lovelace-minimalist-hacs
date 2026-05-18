@@ -1,0 +1,4 @@
+type: custom:button-card
+template: widget_icon_state
+entity: sensor.example
+variables: {}

@@ -1,0 +1,4 @@
+type: custom:button-card
+template: list_1_item
+entity: sensor.example
+variables: {}

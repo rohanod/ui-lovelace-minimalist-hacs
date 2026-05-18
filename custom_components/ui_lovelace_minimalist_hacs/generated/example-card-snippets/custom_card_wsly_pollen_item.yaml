@@ -1,0 +1,4 @@
+type: custom:button-card
+template: custom_card_wsly_pollen_item
+entity: sensor.example
+variables: {}

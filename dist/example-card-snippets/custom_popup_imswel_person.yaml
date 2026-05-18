@@ -1,0 +1,4 @@
+type: custom:button-card
+template: custom_popup_imswel_person
+entity: person.example
+variables: {}

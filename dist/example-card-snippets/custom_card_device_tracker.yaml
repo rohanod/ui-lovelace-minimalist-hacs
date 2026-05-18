@@ -1,0 +1,4 @@
+type: custom:button-card
+template: custom_card_device_tracker
+entity: sensor.example
+variables: {}

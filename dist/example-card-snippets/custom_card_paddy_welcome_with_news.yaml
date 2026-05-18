@@ -1,0 +1,4 @@
+type: custom:button-card
+template: custom_card_paddy_welcome_with_news
+entity: sensor.example
+variables: {}

@@ -1,0 +1,4 @@
+type: custom:button-card
+template: custom_colors
+entity: sensor.example
+variables: {}

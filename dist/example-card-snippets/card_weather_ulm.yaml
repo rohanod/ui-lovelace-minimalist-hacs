@@ -1,0 +1,4 @@
+type: custom:button-card
+template: card_weather_ulm
+entity: weather.example
+variables: {}

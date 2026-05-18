@@ -1,0 +1,4 @@
+type: custom:button-card
+template: card_ps4
+entity: sensor.example
+variables: {}

@@ -1,0 +1,4 @@
+type: custom:button-card
+template: custom_card_mpse_thermostat
+entity: sensor.example
+variables: {}

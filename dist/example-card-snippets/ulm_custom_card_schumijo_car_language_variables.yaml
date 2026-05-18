@@ -1,0 +1,4 @@
+type: custom:button-card
+template: ulm_custom_card_schumijo_car_language_variables
+entity: sensor.example
+variables: {}

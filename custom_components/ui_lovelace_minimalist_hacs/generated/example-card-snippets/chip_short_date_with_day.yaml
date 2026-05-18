@@ -1,0 +1,4 @@
+type: custom:button-card
+template: chip_short_date_with_day
+entity: sensor.example
+variables: {}

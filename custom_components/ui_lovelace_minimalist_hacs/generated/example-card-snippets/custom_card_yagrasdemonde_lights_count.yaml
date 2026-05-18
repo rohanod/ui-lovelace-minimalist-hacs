@@ -1,0 +1,4 @@
+type: custom:button-card
+template: custom_card_yagrasdemonde_lights_count
+entity: light.example
+variables: {}

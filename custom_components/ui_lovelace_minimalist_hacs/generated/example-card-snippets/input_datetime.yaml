@@ -1,0 +1,4 @@
+type: custom:button-card
+template: input_datetime
+entity: sensor.example
+variables: {}

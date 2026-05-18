@@ -1,0 +1,4 @@
+type: custom:button-card
+template: car
+entity: sensor.example
+variables: {}

@@ -1,0 +1,4 @@
+type: custom:button-card
+template: custom_card_nik_door
+entity: sensor.example
+variables: {}

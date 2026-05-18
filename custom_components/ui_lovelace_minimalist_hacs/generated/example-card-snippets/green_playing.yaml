@@ -1,0 +1,4 @@
+type: custom:button-card
+template: green_playing
+entity: sensor.example
+variables: {}

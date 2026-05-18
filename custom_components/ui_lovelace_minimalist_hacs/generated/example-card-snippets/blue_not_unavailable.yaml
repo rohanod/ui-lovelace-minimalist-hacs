@@ -1,0 +1,4 @@
+type: custom:button-card
+template: blue_not_unavailable
+entity: sensor.example
+variables: {}

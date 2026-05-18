@@ -1,0 +1,4 @@
+type: custom:button-card
+template: chip_power_consumption
+entity: sensor.example_power
+variables: {}

@@ -1,0 +1,4 @@
+type: custom:button-card
+template: card_qubino
+entity: sensor.example
+variables: {}

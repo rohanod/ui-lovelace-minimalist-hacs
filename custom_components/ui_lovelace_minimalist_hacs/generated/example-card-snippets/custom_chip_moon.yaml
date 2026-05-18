@@ -1,0 +1,4 @@
+type: custom:button-card
+template: custom_chip_moon
+entity: sensor.example
+variables: {}

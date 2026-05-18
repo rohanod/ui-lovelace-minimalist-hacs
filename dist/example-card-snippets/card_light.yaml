@@ -1,0 +1,4 @@
+type: custom:button-card
+template: card_light
+entity: light.example
+variables: {}
