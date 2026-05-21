@@ -6,6 +6,7 @@ from collections.abc import Mapping
 from contextlib import suppress
 import logging
 from pathlib import Path
+import shutil
 from typing import Any
 
 from homeassistant.components.http import StaticPathConfig
@@ -14,7 +15,14 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers.event import async_call_later
 
-from .const import DOMAIN, RESOURCE_ROOT, RESOURCE_URL, VERSIONED_RESOURCE_URL
+from .const import (
+    DOMAIN,
+    RESOURCE_FILENAME,
+    RESOURCE_ROOT,
+    RESOURCE_URL,
+    VERSIONED_RESOURCE_URL,
+    WWW_RESOURCE_URL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,6 +39,19 @@ async def _async_register_static_path(hass: HomeAssistant) -> None:
         await hass.http.async_register_static_paths(
             [StaticPathConfig(RESOURCE_ROOT, str(source), True)]
         )
+
+
+async def _async_copy_www_resource(hass: HomeAssistant) -> None:
+    """Copy the frontend module into Home Assistant's normal /local path."""
+    source = Path(__file__).parent / "generated" / RESOURCE_FILENAME
+    target_dir = Path(hass.config.path("www", "community", DOMAIN))
+    target = target_dir / RESOURCE_FILENAME
+
+    def copy_resource() -> None:
+        target_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, target)
+
+    await hass.async_add_executor_job(copy_resource)
 
 
 async def _async_register_lovelace_resource(hass: HomeAssistant) -> None:
@@ -53,7 +74,7 @@ async def _async_register_lovelace_resource(hass: HomeAssistant) -> None:
     existing = [
         item
         for item in resources.async_items()
-        if _resource_path(item.get("url", "")) == RESOURCE_URL
+        if _resource_path(item.get("url", "")) in {RESOURCE_URL, WWW_RESOURCE_URL}
     ]
     resource_config = {"res_type": "module", "url": VERSIONED_RESOURCE_URL}
 
@@ -71,6 +92,7 @@ async def _async_register_lovelace_resource(hass: HomeAssistant) -> None:
 async def _async_register_frontend(hass: HomeAssistant) -> None:
     """Register the static file route and Lovelace resource."""
     await _async_register_static_path(hass)
+    await _async_copy_www_resource(hass)
     await _async_register_lovelace_resource(hass)
 
 

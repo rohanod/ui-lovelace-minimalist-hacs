@@ -25,7 +25,7 @@ The wrapper card resolves bundled UI Lovelace Minimalist templates internally, t
 The integration registers one Lovelace resource automatically:
 
 ```text
-/ui_lovelace_minimalist_hacs/ui-lovelace-minimalist-hacs.js?v=1.0.0
+/local/community/ui_lovelace_minimalist_hacs/ui-lovelace-minimalist-hacs.js?v=1.0.0
 ```
 
 In storage-mode dashboards this should appear under Settings -> Dashboards -> Resources after Home Assistant starts.
