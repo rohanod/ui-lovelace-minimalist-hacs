@@ -22,6 +22,14 @@ The wrapper card resolves bundled UI Lovelace Minimalist templates internally, t
 4. Add the integration from Settings -> Devices & services.
 5. Use `type: custom:ui-lovelace-minimalist-hacs` in any dashboard.
 
+The integration registers one Lovelace resource automatically:
+
+```text
+/ui_lovelace_minimalist_hacs/ui-lovelace-minimalist-hacs.js?v=1.0.0
+```
+
+In storage-mode dashboards this should appear under Settings -> Dashboards -> Resources after Home Assistant starts.
+
 You still need `custom:button-card` installed, because this wrapper renders button-card after resolving the bundled Minimalist templates.
 
 ## Examples
