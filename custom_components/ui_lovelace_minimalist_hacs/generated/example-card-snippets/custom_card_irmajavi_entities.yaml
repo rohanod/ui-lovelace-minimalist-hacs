@@ -1,4 +1,4 @@
-type: custom:button-card
+type: custom:ui-lovelace-minimalist-hacs
 template: custom_card_irmajavi_entities
 entity: sensor.example
 variables: {}

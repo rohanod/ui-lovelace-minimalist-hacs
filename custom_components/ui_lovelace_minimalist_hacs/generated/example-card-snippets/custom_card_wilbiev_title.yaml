@@ -1,4 +1,4 @@
-type: custom:button-card
+type: custom:ui-lovelace-minimalist-hacs
 template: custom_card_wilbiev_title
 entity: sensor.example
 variables: {}

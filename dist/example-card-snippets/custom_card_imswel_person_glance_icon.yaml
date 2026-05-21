@@ -1,4 +1,4 @@
-type: custom:button-card
+type: custom:ui-lovelace-minimalist-hacs
 template: custom_card_imswel_person_glance_icon
 entity: person.example
 variables: {}

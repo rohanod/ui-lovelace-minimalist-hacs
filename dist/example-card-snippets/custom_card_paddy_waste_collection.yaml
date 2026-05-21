@@ -1,4 +1,4 @@
-type: custom:button-card
+type: custom:ui-lovelace-minimalist-hacs
 template: custom_card_paddy_waste_collection
 entity: sensor.example
 variables: {}

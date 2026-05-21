@@ -1,4 +1,4 @@
-type: custom:button-card
+type: custom:ui-lovelace-minimalist-hacs
 template: widget_icon_for_thermostat
 entity: sensor.example
 variables: {}

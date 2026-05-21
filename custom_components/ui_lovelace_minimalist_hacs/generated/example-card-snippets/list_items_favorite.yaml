@@ -1,4 +1,4 @@
-type: custom:button-card
+type: custom:ui-lovelace-minimalist-hacs
 template: list_items_favorite
 entity: sensor.example
 variables: {}

@@ -1,4 +1,4 @@
-type: custom:button-card
+type: custom:ui-lovelace-minimalist-hacs
 template: custom_card_senoro_win
 entity: sensor.example
 variables: {}

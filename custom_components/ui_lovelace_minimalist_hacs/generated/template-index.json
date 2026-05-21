@@ -1908,6 +1908,12 @@
     "directUse": false
   },
   {
+    "name": "ulm_custom_actions",
+    "source": "custom_components/ui_lovelace_minimalist/lovelace/custom_actions.yaml",
+    "category": "support",
+    "directUse": false
+  },
+  {
     "name": "ulm_custom_card_damix48_power_details_language_variables",
     "source": "custom_cards/custom_card_damix48_power_details/languages/de.yaml",
     "category": "community",
@@ -2266,6 +2272,12 @@
     "source": "custom_cards/custom_card_yagrasdemonde_lights_count/languages/RU.yaml",
     "category": "community",
     "directUse": true
+  },
+  {
+    "name": "ulm_translation_engine",
+    "source": "custom_components/ui_lovelace_minimalist/lovelace/translations/default.yaml",
+    "category": "support",
+    "directUse": false
   },
   {
     "name": "vertical_buttons",

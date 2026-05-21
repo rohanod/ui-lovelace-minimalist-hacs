@@ -1,4 +1,4 @@
-type: custom:button-card
+type: custom:ui-lovelace-minimalist-hacs
 template: chip_short_date_with_day
 entity: sensor.example
 variables: {}

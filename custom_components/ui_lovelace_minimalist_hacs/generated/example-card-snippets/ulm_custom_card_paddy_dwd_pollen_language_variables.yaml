@@ -1,4 +1,4 @@
-type: custom:button-card
+type: custom:ui-lovelace-minimalist-hacs
 template: ulm_custom_card_paddy_dwd_pollen_language_variables
 entity: sensor.example
 variables: {}

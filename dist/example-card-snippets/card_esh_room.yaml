@@ -1,4 +1,4 @@
-type: custom:button-card
+type: custom:ui-lovelace-minimalist-hacs
 template: card_esh_room
 entity: sensor.example
 variables: {}

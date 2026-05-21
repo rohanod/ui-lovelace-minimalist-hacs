@@ -1,7 +1,8 @@
-import { mkdtemp, readdir, readFile, rm, writeFile, mkdir, copyFile } from "node:fs/promises";
+import { mkdtemp, readdir, readFile, rm, writeFile, mkdir } from "node:fs/promises";
 import { existsSync } from "node:fs";
-import { dirname, join, relative } from "node:path";
+import { join, relative } from "node:path";
 import { tmpdir } from "node:os";
+import { parse } from "yaml";
 
 const repoRoot = join(import.meta.dir, "..");
 const defaultRepo = "https://github.com/UI-Lovelace-Minimalist/UI.git";
@@ -10,7 +11,7 @@ const integrationDir = join(repoRoot, "custom_components", integrationDomain);
 const generatedDir = join(integrationDir, "generated");
 const distDir = join(repoRoot, "dist");
 const pluginFileName = "ui-lovelace-minimalist-hacs.js";
-const dashboardExamplesFileName = "dashboard-card-examples.yaml";
+const wrapperExamplesFileName = "wrapper-card-examples.yaml";
 
 type TemplateEntry = {
   name: string;
@@ -47,22 +48,8 @@ async function listFiles(root: string): Promise<string[]> {
   return files.flat().sort();
 }
 
-async function copyTree(source: string, destination: string) {
-  await rm(destination, { recursive: true, force: true });
-  await mkdir(destination, { recursive: true });
-  for (const file of await listFiles(source)) {
-    const target = join(destination, relative(source, file));
-    await mkdir(dirname(target), { recursive: true });
-    await copyFile(file, target);
-  }
-}
-
 function stripDocumentMarker(content: string): string {
   return content.replace(/^---\s*\r?\n/, "").trimEnd();
-}
-
-function topLevelKeys(content: string): string[] {
-  return [...content.matchAll(/^([A-Za-z0-9_][A-Za-z0-9_-]*):\s*(?:#.*)?$/gm)].map((match) => match[1]);
 }
 
 function categoryFor(path: string): string {
@@ -100,7 +87,7 @@ function exampleEntityFor(templateName: string): string {
 function snippetFor(templateName: string): string {
   const entity = exampleEntityFor(templateName);
   return [
-    "type: custom:button-card",
+    "type: custom:ui-lovelace-minimalist-hacs",
     `template: ${templateName}`,
     `entity: ${entity}`,
     "variables: {}",
@@ -198,7 +185,7 @@ async function writeGeneratedIntegration(sourceRepo: string, entries: TemplateEn
       step: {
         user: {
           title: "Install generated Minimalist dashboard assets",
-          description: "This helper copies generated YAML templates and snippets into www/community/ui_lovelace_minimalist_hacs.",
+          description: "This integration registers the UI Lovelace Minimalist wrapper card resource.",
         },
       },
     },
@@ -211,34 +198,9 @@ async function writeGeneratedIntegration(sourceRepo: string, entries: TemplateEn
   }, null, 2)}\n`);
 }
 
-function pluginEntrypoint(templateCount: number): string {
+function pluginEntrypoint(templateCount: number, templates: Record<string, unknown>): string {
   return `const TEMPLATE_COUNT = ${templateCount};
-
-const DEFAULT_TEMPLATES = [
-  "card_light",
-  "card_room",
-  "card_person",
-  "card_media_player",
-  "card_power_outlet",
-  "card_weather",
-  "chip_icon_state",
-  "chip_temperature"
-];
-
-const DEFAULT_EXAMPLES = [
-  {
-    title: "Light",
-    yaml: "type: custom:button-card\\ntemplate: card_light\\nentity: light.living_room\\nvariables:\\n  ulm_card_light_enable_slider: true"
-  },
-  {
-    title: "Room",
-    yaml: "type: custom:button-card\\ntemplate: card_room\\nname: Living Room\\nentity: light.living_room\\nvariables:\\n  label_use_brightness: true"
-  },
-  {
-    title: "Person",
-    yaml: "type: custom:button-card\\ntemplate: card_person\\nentity: person.rohan\\nvariables: {}"
-  }
-];
+const BUTTON_CARD_TEMPLATES = ${JSON.stringify(templates)};
 
 const escapeHtml = (value) => String(value ?? "")
   .replaceAll("&", "&amp;")
@@ -247,75 +209,102 @@ const escapeHtml = (value) => String(value ?? "")
   .replaceAll('"', "&quot;")
   .replaceAll("'", "&#39;");
 
+const clone = (value) => {
+  if (typeof structuredClone === "function") return structuredClone(value);
+  return JSON.parse(JSON.stringify(value));
+};
+
+const isObject = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+
+const mergeConfig = (base, override) => {
+  if (!isObject(base) || !isObject(override)) return clone(override);
+  const merged = clone(base);
+  for (const [key, value] of Object.entries(override)) {
+    if (value === undefined) continue;
+    if (isObject(merged[key]) && isObject(value)) {
+      merged[key] = mergeConfig(merged[key], value);
+    } else {
+      merged[key] = clone(value);
+    }
+  }
+  return merged;
+};
+
+const asTemplateList = (template) => {
+  if (!template) return [];
+  return Array.isArray(template) ? template : [template];
+};
+
+const isLiteralTemplateName = (templateName) => typeof templateName === "string" && !templateName.trim().startsWith("[[[");
+
+const resolveButtonCardConfig = (config, stack = []) => {
+  const templates = asTemplateList(config.template);
+  let resolved = {};
+  for (const templateName of templates) {
+    if (!isLiteralTemplateName(templateName)) continue;
+    if (!BUTTON_CARD_TEMPLATES[templateName]) {
+      throw new Error("UI Lovelace Minimalist template '" + templateName + "' is missing from the bundled integration.");
+    }
+    if (stack.includes(templateName)) {
+      throw new Error("Circular UI Lovelace Minimalist template reference: " + [...stack, templateName].join(" -> "));
+    }
+    resolved = mergeConfig(resolved, resolveButtonCardConfig(BUTTON_CARD_TEMPLATES[templateName], [...stack, templateName]));
+  }
+  const ownConfig = clone(config);
+  delete ownConfig.template;
+  return mergeConfig(resolved, ownConfig);
+};
+
+const resolveNestedButtonCards = (value) => {
+  if (Array.isArray(value)) return value.map(resolveNestedButtonCards);
+  if (!isObject(value)) return value;
+  let current = value;
+  const templates = asTemplateList(current.template);
+  if (current.type === "custom:button-card" && templates.some(isLiteralTemplateName)) {
+    current = resolveButtonCardConfig(current);
+    current.type = "custom:button-card";
+  }
+  const resolved = {};
+  for (const [key, nestedValue] of Object.entries(current)) {
+    resolved[key] = resolveNestedButtonCards(nestedValue);
+  }
+  return resolved;
+};
+
 class UiLovelaceMinimalistHacs extends HTMLElement {
   setConfig(config) {
-    this.config = config || {};
+    if (!config || !config.template) {
+      throw new Error("Specify a bundled Minimalist template, for example template: card_light");
+    }
+    this.config = config;
+    this.renderCard();
   }
 
   set hass(hass) {
     this._hass = hass;
-    this.render();
+    if (this.child) this.child.hass = hass;
   }
 
-  renderTemplateList(templates) {
-    return [
-      "<div class=\\"template-grid\\">",
-      ...templates.map((template) => "<code>" + escapeHtml(template) + "</code>"),
-      "</div>"
-    ].join("");
-  }
-
-  renderExamples(examples) {
-    return examples.map((example) => [
-      "<section class=\\"example\\">",
-      "<h2>" + escapeHtml(example.title || "Example") + "</h2>",
-      "<pre><code>" + escapeHtml(example.yaml || "") + "</code></pre>",
-      "</section>"
-    ].join("")).join("");
-  }
-
-  render() {
+  async renderCard() {
     const root = this.shadowRoot ?? this.attachShadow({ mode: "open" });
-    const config = this.config || {};
-    const mode = config.mode || "summary";
-    const templates = Array.isArray(config.templates) && config.templates.length ? config.templates : DEFAULT_TEMPLATES;
-    const examples = Array.isArray(config.examples) && config.examples.length ? config.examples : DEFAULT_EXAMPLES;
-    const title = config.title || "UI Lovelace Minimalist HACS";
-    const description = config.description || TEMPLATE_COUNT + " generated button-card templates are installed.";
-    const body = mode === "templates"
-      ? this.renderTemplateList(templates)
-      : mode === "examples"
-        ? this.renderExamples(examples)
-        : [
-            "<p>" + escapeHtml(description) + "</p>",
-            this.renderTemplateList(templates.slice(0, 8))
-          ].join("");
-
-    root.innerHTML = [
-      "<ha-card>",
-      "<div class=\\"content\\">",
-      "<h1>" + escapeHtml(title) + "</h1>",
-      body,
-      "</div>",
-      "</ha-card>",
-      "<style>",
-      "ha-card { padding: 16px; }",
-      ".content { display: grid; gap: 12px; }",
-      "h1 { font-size: 18px; margin: 0; }",
-      "h2 { font-size: 14px; margin: 0; }",
-      "p { margin: 0; color: var(--secondary-text-color); }",
-      ".template-grid { display: flex; flex-wrap: wrap; gap: 8px; }",
-      "code { background: var(--code-editor-background-color, rgba(127,127,127,0.14)); border-radius: 6px; padding: 3px 6px; }",
-      "pre { overflow-x: auto; margin: 0; padding: 10px; background: var(--code-editor-background-color, rgba(127,127,127,0.14)); border-radius: 8px; }",
-      "pre code { background: transparent; padding: 0; white-space: pre; }",
-      ".example { display: grid; gap: 6px; }",
-      "</style>"
-    ].join("");
+    try {
+      const buttonCardConfig = resolveNestedButtonCards(resolveButtonCardConfig({
+        ...this.config,
+        type: "custom:button-card"
+      }));
+      buttonCardConfig.type = "custom:button-card";
+      const helpers = await window.loadCardHelpers();
+      const child = helpers.createCardElement(buttonCardConfig);
+      if (this._hass) child.hass = this._hass;
+      this.child = child;
+      root.replaceChildren(child);
+    } catch (error) {
+      root.innerHTML = "<ha-card><div class=\\"error\\"><b>UI Lovelace Minimalist HACS</b><p>" + escapeHtml(error.message || error) + "</p></div></ha-card><style>ha-card{padding:16px}.error{display:grid;gap:8px;color:var(--error-color)}</style>";
+    }
   }
 
   getCardSize() {
-    const mode = this.config?.mode || "summary";
-    return mode === "examples" ? 5 : 2;
+    return this.child?.getCardSize?.() || 3;
   }
 }
 
@@ -327,63 +316,36 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: "ui-lovelace-minimalist-hacs",
   name: "UI Lovelace Minimalist HACS",
-  description: "Shows installed Minimalist template examples and quick reference."
+  description: "Renders bundled UI Lovelace Minimalist templates through one wrapper card."
 });
 
-console.info("UI Lovelace Minimalist HACS loaded");
+console.info("UI Lovelace Minimalist HACS loaded with " + TEMPLATE_COUNT + " templates");
 `;
 }
 
-function dashboardCardExamples(): string {
-  return `# These examples are for the helper dashboard card itself.
-# Button-card templates such as battery_info still require the generated
-# button_card_templates block from dist/ui-raw-dashboard-snippet.yaml.
-
-# Basic status card
+function wrapperCardExamples(): string {
+  return `# Dimmable light
 type: custom:ui-lovelace-minimalist-hacs
-
----
-# Show a curated list of installed templates
-type: custom:ui-lovelace-minimalist-hacs
-title: Minimalist templates
-mode: templates
-templates:
-  - card_light
-  - card_room
-  - card_person
-  - card_media_player
-  - card_power_outlet
-  - card_weather
-  - chip_icon_state
-  - chip_temperature
+template: card_light
+entity: light.living_room
+variables:
+  ulm_card_light_enable_slider: true
 
 ---
-# Show pasteable card examples on the dashboard
+# Room
 type: custom:ui-lovelace-minimalist-hacs
-title: Minimalist examples
-mode: examples
-examples:
-  - title: Dimmable light
-    yaml: |
-      type: custom:button-card
-      template: card_light
-      entity: light.living_room
-      variables:
-        ulm_card_light_enable_slider: true
-  - title: Room
-    yaml: |
-      type: custom:button-card
-      template: card_room
-      name: Living Room
-      entity: light.living_room
-      variables:
-        label_use_brightness: true
-  - title: Person
-    yaml: |
-      type: custom:button-card
-      template: card_person
-      entity: person.rohan
-      variables: {}
+template: card_room
+name: Living Room
+entity: light.living_room
+variables:
+  label_use_brightness: true
+
+---
+# Battery info community template
+type: custom:ui-lovelace-minimalist-hacs
+template: battery_info
+entity: sensor.phone_battery
+variables: {}
 `;
 }
 
@@ -418,39 +380,35 @@ async function main() {
     await mkdir(distDir, { recursive: true });
     await mkdir(generatedDir, { recursive: true });
 
-    await copyTree(templateRoot, join(generatedDir, "ulm_templates"));
-    await copyTree(communityRoot, join(generatedDir, "community_cards"));
-
     const yamlFiles = [
       ...(await listFiles(templateRoot)),
+      join(source.path, "custom_components", "ui_lovelace_minimalist", "lovelace", "custom_actions.yaml"),
+      join(source.path, "custom_components", "ui_lovelace_minimalist", "lovelace", "translations", "default.yaml"),
       ...(await listFiles(communityRoot)),
     ].filter((file) => file.endsWith(".yaml") || file.endsWith(".yml"));
 
-    const sections: string[] = [];
+    const templates: Record<string, unknown> = {};
     const entries: TemplateEntry[] = [];
     for (const file of yamlFiles) {
       const content = stripDocumentMarker(await readFile(file, "utf8"));
       if (!content.trim()) continue;
       const rel = relative(source.path, file).replaceAll("\\", "/");
       const category = categoryFor(`/${rel}`);
-      sections.push(`# Source: ${rel}\n${content}`);
-      for (const name of topLevelKeys(content)) {
+      const parsed = parse(content) as Record<string, unknown> | null;
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) continue;
+      for (const [name, value] of Object.entries(parsed)) {
+        templates[name] = value;
         entries.push({ name, source: rel, category, directUse: isDirectUse(category) });
       }
     }
 
     entries.sort((a, b) => a.name.localeCompare(b.name) || a.source.localeCompare(b.source));
-    const bundle = `${sections.join("\n\n")}\n`;
-    await writeFile(join(distDir, "button-card-templates.yaml"), bundle);
-    await writeFile(join(generatedDir, "button-card-templates.yaml"), bundle);
-    await writeFile(join(distDir, "ui-raw-dashboard-snippet.yaml"), `button_card_templates:\n${bundle.split("\n").map((line) => line ? `  ${line}` : line).join("\n")}`);
-    await writeFile(join(generatedDir, "ui-raw-dashboard-snippet.yaml"), `button_card_templates:\n${bundle.split("\n").map((line) => line ? `  ${line}` : line).join("\n")}`);
     await writeFile(join(distDir, "template-index.json"), `${JSON.stringify(entries, null, 2)}\n`);
     await writeFile(join(generatedDir, "template-index.json"), `${JSON.stringify(entries, null, 2)}\n`);
-    await writeFile(join(distDir, pluginFileName), pluginEntrypoint(entries.length));
-    await writeFile(join(generatedDir, pluginFileName), pluginEntrypoint(entries.length));
-    await writeFile(join(distDir, dashboardExamplesFileName), dashboardCardExamples());
-    await writeFile(join(generatedDir, dashboardExamplesFileName), dashboardCardExamples());
+    await writeFile(join(distDir, pluginFileName), pluginEntrypoint(entries.length, templates));
+    await writeFile(join(generatedDir, pluginFileName), pluginEntrypoint(entries.length, templates));
+    await writeFile(join(distDir, wrapperExamplesFileName), wrapperCardExamples());
+    await writeFile(join(generatedDir, wrapperExamplesFileName), wrapperCardExamples());
 
     const snippetDir = join(distDir, "example-card-snippets");
     const generatedSnippetDir = join(generatedDir, "example-card-snippets");

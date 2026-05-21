@@ -19,6 +19,7 @@
   "license": "Apache-2.0",
   "type": "module",
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "yaml": "^2.9.0"
   }
 }

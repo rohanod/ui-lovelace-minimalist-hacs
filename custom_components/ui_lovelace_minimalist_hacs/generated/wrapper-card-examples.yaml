@@ -1,0 +1,22 @@
+# Dimmable light
+type: custom:ui-lovelace-minimalist-hacs
+template: card_light
+entity: light.living_room
+variables:
+  ulm_card_light_enable_slider: true
+
+---
+# Room
+type: custom:ui-lovelace-minimalist-hacs
+template: card_room
+name: Living Room
+entity: light.living_room
+variables:
+  label_use_brightness: true
+
+---
+# Battery info community template
+type: custom:ui-lovelace-minimalist-hacs
+template: battery_info
+entity: sensor.phone_battery
+variables: {}

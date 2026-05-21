@@ -1,4 +1,4 @@
-type: custom:button-card
+type: custom:ui-lovelace-minimalist-hacs
 template: card_media_player_sonos_with_controls
 entity: media_player.example
 variables: {}

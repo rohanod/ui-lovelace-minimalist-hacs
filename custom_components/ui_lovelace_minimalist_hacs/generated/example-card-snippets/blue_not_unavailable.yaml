@@ -1,4 +1,4 @@
-type: custom:button-card
+type: custom:ui-lovelace-minimalist-hacs
 template: blue_not_unavailable
 entity: sensor.example
 variables: {}

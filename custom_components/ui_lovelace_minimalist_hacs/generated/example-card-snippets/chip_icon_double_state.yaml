@@ -1,4 +1,4 @@
-type: custom:button-card
+type: custom:ui-lovelace-minimalist-hacs
 template: chip_icon_double_state
 entity: sensor.example
 variables: {}

@@ -1,4 +1,4 @@
-type: custom:button-card
+type: custom:ui-lovelace-minimalist-hacs
 template: custom_card_mpse_printer_blue
 entity: sensor.example
 variables: {}
