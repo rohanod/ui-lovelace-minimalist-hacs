@@ -17,4 +17,6 @@ _MANIFEST_PATH = Path(__file__).parent / "manifest.json"
 with _MANIFEST_PATH.open(encoding="utf-8") as manifest_file:
     VERSION: Final = json.load(manifest_file).get("version", "0.0.0")
 
-VERSIONED_RESOURCE_URL: Final = f"{WWW_RESOURCE_URL}?v={VERSION}"
+VERSIONED_RESOURCE_FILENAME: Final = f"ui-lovelace-minimalist-hacs-v{VERSION}.js"
+VERSIONED_WWW_RESOURCE_URL: Final = f"{WWW_RESOURCE_ROOT}/{VERSIONED_RESOURCE_FILENAME}"
+VERSIONED_RESOURCE_URL: Final = VERSIONED_WWW_RESOURCE_URL

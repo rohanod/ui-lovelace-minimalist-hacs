@@ -20,6 +20,7 @@ from .const import (
     RESOURCE_FILENAME,
     RESOURCE_ROOT,
     RESOURCE_URL,
+    VERSIONED_RESOURCE_FILENAME,
     VERSIONED_RESOURCE_URL,
     WWW_RESOURCE_URL,
 )
@@ -46,10 +47,12 @@ async def _async_copy_www_resource(hass: HomeAssistant) -> None:
     source = Path(__file__).parent / "generated" / RESOURCE_FILENAME
     target_dir = Path(hass.config.path("www", "community", DOMAIN))
     target = target_dir / RESOURCE_FILENAME
+    versioned_target = target_dir / VERSIONED_RESOURCE_FILENAME
 
     def copy_resource() -> None:
         target_dir.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, target)
+        shutil.copy2(source, versioned_target)
 
     await hass.async_add_executor_job(copy_resource)
 
