@@ -1,4 +1,0 @@
-type: custom:ui-lovelace-minimalist-hacs
-template: chip_weather_date
-entity: weather.example
-variables: {}

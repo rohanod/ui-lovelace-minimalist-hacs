@@ -6,12 +6,8 @@ import { parse } from "yaml";
 
 const repoRoot = join(import.meta.dir, "..");
 const defaultRepo = "https://github.com/UI-Lovelace-Minimalist/UI.git";
-const integrationDomain = "ui_lovelace_minimalist_hacs";
-const integrationDir = join(repoRoot, "custom_components", integrationDomain);
-const generatedDir = join(integrationDir, "generated");
 const distDir = join(repoRoot, "dist");
 const pluginFileName = "ui-lovelace-minimalist-hacs.js";
-const integrationVersion = "1.0.1";
 const wrapperExamplesFileName = "wrapper-card-examples.yaml";
 
 type TemplateEntry = {
@@ -47,6 +43,13 @@ async function listFiles(root: string): Promise<string[]> {
     return [];
   }));
   return files.flat().sort();
+}
+
+async function resetDirectory(root: string) {
+  if (existsSync(root)) {
+    await run(["rm", "-rf", root], repoRoot);
+  }
+  await mkdir(root, { recursive: true });
 }
 
 function stripDocumentMarker(content: string): string {
@@ -94,213 +97,6 @@ function snippetFor(templateName: string): string {
     "variables: {}",
     "",
   ].join("\n");
-}
-
-async function writeGeneratedIntegration(sourceRepo: string, entries: TemplateEntry[]) {
-  await mkdir(integrationDir, { recursive: true });
-  await writeFile(join(integrationDir, "manifest.json"), `${JSON.stringify({
-    domain: integrationDomain,
-    name: "UI Lovelace Minimalist HACS",
-    codeowners: [],
-    config_flow: true,
-    dependencies: ["http", "lovelace", "frontend"],
-    documentation: "https://github.com/rohan/ui-lovelace-minimalist-hacs",
-    iot_class: "calculated",
-    issue_tracker: "https://github.com/rohan/ui-lovelace-minimalist-hacs/issues",
-    version: integrationVersion,
-  }, null, 2)}\n`);
-  await writeFile(join(integrationDir, "const.py"), [
-    "from __future__ import annotations",
-    "",
-    "import json",
-    "from pathlib import Path",
-    "from typing import Final",
-    "",
-    `DOMAIN: Final = "${integrationDomain}"`,
-    `NAME: Final = "UI Lovelace Minimalist HACS"`,
-    `GENERATED_PATH: Final = "generated"`,
-    `RESOURCE_ROOT: Final = f"/{DOMAIN}"`,
-    `RESOURCE_FILENAME: Final = "${pluginFileName}"`,
-    `RESOURCE_URL: Final = f"{RESOURCE_ROOT}/{RESOURCE_FILENAME}"`,
-    `WWW_RESOURCE_ROOT: Final = f"/local/community/{DOMAIN}"`,
-    `WWW_RESOURCE_URL: Final = f"{WWW_RESOURCE_ROOT}/{RESOURCE_FILENAME}"`,
-    "",
-    `_MANIFEST_PATH = Path(__file__).parent / "manifest.json"`,
-    `with _MANIFEST_PATH.open(encoding="utf-8") as manifest_file:`,
-    `    VERSION: Final = json.load(manifest_file).get("version", "0.0.0")`,
-    "",
-    `VERSIONED_RESOURCE_FILENAME: Final = f"ui-lovelace-minimalist-hacs-v{VERSION}.js"`,
-    `VERSIONED_WWW_RESOURCE_URL: Final = f"{WWW_RESOURCE_ROOT}/{VERSIONED_RESOURCE_FILENAME}"`,
-    `VERSIONED_RESOURCE_URL: Final = VERSIONED_WWW_RESOURCE_URL`,
-    "",
-  ].join("\n"));
-  await writeFile(join(integrationDir, "__init__.py"), [
-    "\"\"\"UI Lovelace Minimalist HACS helper integration.\"\"\"",
-    "",
-    "from __future__ import annotations",
-    "",
-    "from collections.abc import Mapping",
-    "from contextlib import suppress",
-    "import logging",
-    "from pathlib import Path",
-    "import shutil",
-    "from typing import Any",
-    "",
-    "from homeassistant.components.http import StaticPathConfig",
-    "from homeassistant.config_entries import ConfigEntry",
-    "from homeassistant.const import EVENT_HOMEASSISTANT_STARTED",
-    "from homeassistant.core import CoreState, HomeAssistant",
-    "from homeassistant.helpers.event import async_call_later",
-    "",
-    "from .const import (",
-    "    DOMAIN,",
-    "    RESOURCE_FILENAME,",
-    "    RESOURCE_ROOT,",
-    "    RESOURCE_URL,",
-    "    VERSIONED_RESOURCE_FILENAME,",
-    "    VERSIONED_RESOURCE_URL,",
-    "    WWW_RESOURCE_URL,",
-    ")",
-    "",
-    "_LOGGER = logging.getLogger(__name__)",
-    "",
-    "",
-    "def _resource_path(url: str) -> str:",
-    "    \"\"\"Return the resource URL without query parameters.\"\"\"",
-    "    return url.split(\"?\", 1)[0]",
-    "",
-    "",
-    "async def _async_register_static_path(hass: HomeAssistant) -> None:",
-    "    \"\"\"Serve the bundled frontend module from the integration directory.\"\"\"",
-    "    source = Path(__file__).parent / \"generated\"",
-    "    with suppress(RuntimeError):",
-    "        await hass.http.async_register_static_paths(",
-    "            [StaticPathConfig(RESOURCE_ROOT, str(source), True)]",
-    "        )",
-    "",
-    "",
-    "async def _async_copy_www_resource(hass: HomeAssistant) -> None:",
-    "    \"\"\"Copy the frontend module into Home Assistant's normal /local path.\"\"\"",
-    "    source = Path(__file__).parent / \"generated\" / RESOURCE_FILENAME",
-    "    target_dir = Path(hass.config.path(\"www\", \"community\", DOMAIN))",
-    "    target = target_dir / RESOURCE_FILENAME",
-    "    versioned_target = target_dir / VERSIONED_RESOURCE_FILENAME",
-    "",
-    "    def copy_resource() -> None:",
-    "        target_dir.mkdir(parents=True, exist_ok=True)",
-    "        shutil.copy2(source, target)",
-    "        shutil.copy2(source, versioned_target)",
-    "",
-    "    await hass.async_add_executor_job(copy_resource)",
-    "",
-    "",
-    "async def _async_register_lovelace_resource(hass: HomeAssistant) -> None:",
-    "    \"\"\"Create or update the Lovelace resource in storage mode.\"\"\"",
-    "    lovelace = hass.data.get(\"lovelace\")",
-    "    if lovelace is None or getattr(lovelace, \"mode\", None) != \"storage\":",
-    "        return",
-    "",
-    "    resources = getattr(lovelace, \"resources\", None)",
-    "    if resources is None:",
-    "        return",
-    "",
-    "    if not getattr(resources, \"loaded\", False):",
-    "        async def _retry_resource_registration(_now: Any) -> None:",
-    "            await _async_register_lovelace_resource(hass)",
-    "",
-    "        async_call_later(hass, 5, _retry_resource_registration)",
-    "        return",
-    "",
-    "    existing = [",
-    "        item",
-    "        for item in resources.async_items()",
-    "        if _resource_path(item.get(\"url\", \"\")) in {RESOURCE_URL, WWW_RESOURCE_URL}",
-    "    ]",
-    "    resource_config = {\"res_type\": \"module\", \"url\": VERSIONED_RESOURCE_URL}",
-    "",
-    "    if existing:",
-    "        resource = existing[0]",
-    "        if resource.get(\"url\") != VERSIONED_RESOURCE_URL or resource.get(\"res_type\") != \"module\":",
-    "            await resources.async_update_item(resource[\"id\"], resource_config)",
-    "            _LOGGER.info(\"Updated Lovelace resource %s\", VERSIONED_RESOURCE_URL)",
-    "        return",
-    "",
-    "    await resources.async_create_item(resource_config)",
-    "    _LOGGER.info(\"Registered Lovelace resource %s\", VERSIONED_RESOURCE_URL)",
-    "",
-    "",
-    "async def _async_register_frontend(hass: HomeAssistant) -> None:",
-    "    \"\"\"Register the static file route and Lovelace resource.\"\"\"",
-    "    await _async_register_static_path(hass)",
-    "    await _async_copy_www_resource(hass)",
-    "    await _async_register_lovelace_resource(hass)",
-    "",
-    "",
-    "async def async_setup(hass: HomeAssistant, config: Mapping[str, Any]) -> bool:",
-    "    \"\"\"Set up frontend registration once for the integration.\"\"\"",
-    "",
-    "    async def _setup_frontend(_event: Any = None) -> None:",
-    "        await _async_register_frontend(hass)",
-    "",
-    "    if hass.state == CoreState.running:",
-    "        await _setup_frontend()",
-    "    else:",
-    "        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _setup_frontend)",
-    "",
-    "    return True",
-    "",
-    "async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:",
-    "    \"\"\"Set up the helper config entry.\"\"\"",
-    "    await _async_register_frontend(hass)",
-    "    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {",
-    "        \"resource_url\": VERSIONED_RESOURCE_URL,",
-    "    }",
-    "    return True",
-    "",
-    "async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:",
-    "    \"\"\"Unload the helper integration.\"\"\"",
-    "    hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)",
-    "    return True",
-    "",
-  ].join("\n"));
-  await writeFile(join(integrationDir, "config_flow.py"), [
-    "\"\"\"Config flow for UI Lovelace Minimalist HACS.\"\"\"",
-    "",
-    "from __future__ import annotations",
-    "",
-    "from homeassistant import config_entries",
-    "",
-    "from .const import DOMAIN, NAME",
-    "",
-    "class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):",
-    "    \"\"\"Handle a config flow.\"\"\"",
-    "",
-    "    VERSION = 1",
-    "",
-    "    async def async_step_user(self, user_input=None):",
-    "        \"\"\"Create the single helper entry from the UI.\"\"\"",
-    "        await self.async_set_unique_id(DOMAIN)",
-    "        self._abort_if_unique_id_configured()",
-    "        return self.async_create_entry(title=NAME, data={})",
-    "",
-  ].join("\n"));
-  await writeFile(join(integrationDir, "strings.json"), `${JSON.stringify({
-    title: "UI Lovelace Minimalist HACS",
-    config: {
-      step: {
-        user: {
-          title: "Install generated Minimalist dashboard assets",
-          description: "This integration registers the UI Lovelace Minimalist wrapper card resource.",
-        },
-      },
-    },
-  }, null, 2)}\n`);
-  await writeFile(join(integrationDir, "services.yaml"), "{}\n");
-  await writeFile(join(generatedDir, "source.json"), `${JSON.stringify({
-    source: sourceRepo,
-    generatedAt: new Date().toISOString(),
-    templateCount: entries.length,
-  }, null, 2)}\n`);
 }
 
 function pluginEntrypoint(templateCount: number, templates: Record<string, unknown>): string {
@@ -480,10 +276,7 @@ async function main() {
     if (!existsSync(templateRoot)) throw new Error(`Missing template root: ${templateRoot}`);
     if (!existsSync(communityRoot)) throw new Error(`Missing community cards root: ${communityRoot}`);
 
-    await rm(distDir, { recursive: true, force: true });
-    await rm(generatedDir, { recursive: true, force: true });
-    await mkdir(distDir, { recursive: true });
-    await mkdir(generatedDir, { recursive: true });
+    await resetDirectory(distDir);
 
     const yamlFiles = [
       ...(await listFiles(templateRoot)),
@@ -509,24 +302,17 @@ async function main() {
 
     entries.sort((a, b) => a.name.localeCompare(b.name) || a.source.localeCompare(b.source));
     await writeFile(join(distDir, "template-index.json"), `${JSON.stringify(entries, null, 2)}\n`);
-    await writeFile(join(generatedDir, "template-index.json"), `${JSON.stringify(entries, null, 2)}\n`);
     await writeFile(join(distDir, pluginFileName), pluginEntrypoint(entries.length, templates));
-    await writeFile(join(generatedDir, pluginFileName), pluginEntrypoint(entries.length, templates));
     await writeFile(join(distDir, wrapperExamplesFileName), wrapperCardExamples());
-    await writeFile(join(generatedDir, wrapperExamplesFileName), wrapperCardExamples());
 
     const snippetDir = join(distDir, "example-card-snippets");
-    const generatedSnippetDir = join(generatedDir, "example-card-snippets");
     await mkdir(snippetDir, { recursive: true });
-    await mkdir(generatedSnippetDir, { recursive: true });
     for (const entry of entries.filter((item) => item.directUse)) {
       const filename = `${entry.name}.yaml`;
       const snippet = snippetFor(entry.name);
       await writeFile(join(snippetDir, filename), snippet);
-      await writeFile(join(generatedSnippetDir, filename), snippet);
     }
 
-    await writeGeneratedIntegration(source.label, entries);
     console.log(`Generated ${entries.length} templates from ${source.label}`);
   } finally {
     if (source.cleanup) await rm(source.cleanup, { recursive: true, force: true });

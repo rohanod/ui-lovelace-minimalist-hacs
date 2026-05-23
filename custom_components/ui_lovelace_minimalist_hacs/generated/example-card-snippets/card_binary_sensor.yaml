@@ -1,4 +1,0 @@
-type: custom:ui-lovelace-minimalist-hacs
-template: card_binary_sensor
-entity: binary_sensor.example
-variables: {}

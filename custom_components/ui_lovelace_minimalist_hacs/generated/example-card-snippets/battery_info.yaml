@@ -1,4 +1,0 @@
-type: custom:ui-lovelace-minimalist-hacs
-template: battery_info
-entity: sensor.example_battery
-variables: {}

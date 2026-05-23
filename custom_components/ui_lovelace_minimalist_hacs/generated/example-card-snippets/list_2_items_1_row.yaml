@@ -1,4 +1,0 @@
-type: custom:ui-lovelace-minimalist-hacs
-template: list_2_items_1_row
-entity: sensor.example
-variables: {}

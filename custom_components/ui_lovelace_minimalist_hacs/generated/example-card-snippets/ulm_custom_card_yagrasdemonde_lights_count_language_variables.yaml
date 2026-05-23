@@ -1,4 +1,0 @@
-type: custom:ui-lovelace-minimalist-hacs
-template: ulm_custom_card_yagrasdemonde_lights_count_language_variables
-entity: light.example
-variables: {}

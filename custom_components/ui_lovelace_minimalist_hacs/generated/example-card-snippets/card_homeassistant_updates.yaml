@@ -1,4 +1,0 @@
-type: custom:ui-lovelace-minimalist-hacs
-template: card_homeassistant_updates
-entity: sensor.example
-variables: {}

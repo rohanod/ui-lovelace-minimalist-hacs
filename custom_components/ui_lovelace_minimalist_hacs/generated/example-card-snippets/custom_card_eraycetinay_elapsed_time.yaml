@@ -1,4 +1,0 @@
-type: custom:ui-lovelace-minimalist-hacs
-template: custom_card_eraycetinay_elapsed_time
-entity: sensor.example
-variables: {}

@@ -1,4 +1,0 @@
-type: custom:ui-lovelace-minimalist-hacs
-template: chip_mdi_icon_state
-entity: sensor.example
-variables: {}

@@ -1,4 +1,0 @@
-type: custom:ui-lovelace-minimalist-hacs
-template: custom_card_saxel_fan_blue
-entity: fan.example
-variables: {}

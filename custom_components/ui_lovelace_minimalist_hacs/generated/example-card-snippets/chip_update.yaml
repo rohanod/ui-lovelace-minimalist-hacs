@@ -1,4 +1,0 @@
-type: custom:ui-lovelace-minimalist-hacs
-template: chip_update
-entity: sensor.example
-variables: {}

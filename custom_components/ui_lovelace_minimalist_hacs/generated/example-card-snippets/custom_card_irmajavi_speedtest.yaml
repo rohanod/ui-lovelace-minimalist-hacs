@@ -1,4 +1,0 @@
-type: custom:ui-lovelace-minimalist-hacs
-template: custom_card_irmajavi_speedtest
-entity: sensor.example
-variables: {}

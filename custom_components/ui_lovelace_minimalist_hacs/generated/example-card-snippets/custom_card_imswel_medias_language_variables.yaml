@@ -1,4 +1,0 @@
-type: custom:ui-lovelace-minimalist-hacs
-template: custom_card_imswel_medias_language_variables
-entity: media_player.example
-variables: {}

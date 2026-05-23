@@ -1,4 +1,0 @@
-type: custom:ui-lovelace-minimalist-hacs
-template: custom_card_haven_washer_delayed_text
-entity: sensor.example
-variables: {}

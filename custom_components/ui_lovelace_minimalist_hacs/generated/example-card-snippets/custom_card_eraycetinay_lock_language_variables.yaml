@@ -1,4 +1,0 @@
-type: custom:ui-lovelace-minimalist-hacs
-template: custom_card_eraycetinay_lock_language_variables
-entity: sensor.example
-variables: {}

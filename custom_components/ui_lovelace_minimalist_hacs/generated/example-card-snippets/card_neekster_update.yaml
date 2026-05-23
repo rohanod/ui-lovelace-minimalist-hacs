@@ -1,4 +1,0 @@
-type: custom:ui-lovelace-minimalist-hacs
-template: card_neekster_update
-entity: sensor.example
-variables: {}

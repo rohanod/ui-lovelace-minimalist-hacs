@@ -1,4 +1,0 @@
-type: custom:ui-lovelace-minimalist-hacs
-template: custom_chip_tesla_temperature
-entity: sensor.example_temperature
-variables: {}

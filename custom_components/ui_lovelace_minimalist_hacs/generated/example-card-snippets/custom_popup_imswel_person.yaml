@@ -1,4 +1,0 @@
-type: custom:ui-lovelace-minimalist-hacs
-template: custom_popup_imswel_person
-entity: person.example
-variables: {}

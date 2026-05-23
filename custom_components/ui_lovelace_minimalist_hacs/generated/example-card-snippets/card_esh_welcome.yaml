@@ -1,4 +1,0 @@
-type: custom:ui-lovelace-minimalist-hacs
-template: card_esh_welcome
-entity: sensor.example
-variables: {}

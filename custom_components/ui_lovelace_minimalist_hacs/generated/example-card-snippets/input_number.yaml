@@ -1,4 +1,0 @@
-type: custom:ui-lovelace-minimalist-hacs
-template: input_number
-entity: sensor.example
-variables: {}

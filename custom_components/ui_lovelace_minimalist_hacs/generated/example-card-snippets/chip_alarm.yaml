@@ -1,4 +1,0 @@
-type: custom:ui-lovelace-minimalist-hacs
-template: chip_alarm
-entity: sensor.example
-variables: {}

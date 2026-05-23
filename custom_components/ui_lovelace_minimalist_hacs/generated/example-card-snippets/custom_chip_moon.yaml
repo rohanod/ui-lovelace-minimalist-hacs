@@ -1,4 +1,0 @@
-type: custom:ui-lovelace-minimalist-hacs
-template: custom_chip_moon
-entity: sensor.example
-variables: {}

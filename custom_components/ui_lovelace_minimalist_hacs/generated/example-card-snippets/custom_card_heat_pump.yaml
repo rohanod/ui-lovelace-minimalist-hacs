@@ -1,4 +1,0 @@
-type: custom:ui-lovelace-minimalist-hacs
-template: custom_card_heat_pump
-entity: sensor.example
-variables: {}

@@ -1,4 +1,0 @@
-type: custom:ui-lovelace-minimalist-hacs
-template: custom_card_paddy_welcome_with_weather
-entity: weather.example
-variables: {}

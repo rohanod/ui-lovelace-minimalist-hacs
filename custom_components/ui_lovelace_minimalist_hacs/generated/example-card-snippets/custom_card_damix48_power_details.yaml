@@ -1,4 +1,0 @@
-type: custom:ui-lovelace-minimalist-hacs
-template: custom_card_damix48_power_details
-entity: sensor.example_power
-variables: {}

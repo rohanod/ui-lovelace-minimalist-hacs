@@ -1,4 +1,0 @@
-type: custom:ui-lovelace-minimalist-hacs
-template: icon_info_bg_sonos
-entity: sensor.example
-variables: {}

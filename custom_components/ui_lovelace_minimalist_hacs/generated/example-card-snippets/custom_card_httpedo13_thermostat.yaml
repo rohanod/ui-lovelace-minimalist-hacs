@@ -1,4 +1,0 @@
-type: custom:ui-lovelace-minimalist-hacs
-template: custom_card_httpedo13_thermostat
-entity: sensor.example
-variables: {}

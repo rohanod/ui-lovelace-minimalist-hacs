@@ -1,4 +1,0 @@
-type: custom:ui-lovelace-minimalist-hacs
-template: card_scenes_pill_welcome
-entity: sensor.example
-variables: {}

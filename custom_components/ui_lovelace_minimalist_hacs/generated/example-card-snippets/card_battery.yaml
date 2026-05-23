@@ -1,4 +1,0 @@
-type: custom:ui-lovelace-minimalist-hacs
-template: card_battery
-entity: sensor.example_battery
-variables: {}

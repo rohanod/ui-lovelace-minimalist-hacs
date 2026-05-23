@@ -1,4 +1,0 @@
-type: custom:ui-lovelace-minimalist-hacs
-template: custom_card_paddy_dwd_pollen
-entity: sensor.example
-variables: {}

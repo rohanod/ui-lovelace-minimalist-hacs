@@ -1,4 +1,0 @@
-type: custom:ui-lovelace-minimalist-hacs
-template: chip_navigate
-entity: sensor.example
-variables: {}

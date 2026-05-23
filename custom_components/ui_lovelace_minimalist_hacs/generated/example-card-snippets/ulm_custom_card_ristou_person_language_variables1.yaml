@@ -1,4 +1,0 @@
-type: custom:ui-lovelace-minimalist-hacs
-template: ulm_custom_card_ristou_person_language_variables1
-entity: person.example
-variables: {}

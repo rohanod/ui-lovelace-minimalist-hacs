@@ -1,4 +1,0 @@
-type: custom:ui-lovelace-minimalist-hacs
-template: car
-entity: sensor.example
-variables: {}

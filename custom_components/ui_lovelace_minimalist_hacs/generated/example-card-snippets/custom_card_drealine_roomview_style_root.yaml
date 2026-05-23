@@ -1,4 +1,0 @@
-type: custom:ui-lovelace-minimalist-hacs
-template: custom_card_drealine_roomview_style_root
-entity: sensor.example
-variables: {}

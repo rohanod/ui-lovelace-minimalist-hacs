@@ -1,4 +1,0 @@
-type: custom:ui-lovelace-minimalist-hacs
-template: custom_widget_nik_tablet
-entity: sensor.example
-variables: {}

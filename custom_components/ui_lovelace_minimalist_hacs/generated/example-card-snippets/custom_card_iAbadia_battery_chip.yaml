@@ -1,4 +1,0 @@
-type: custom:ui-lovelace-minimalist-hacs
-template: custom_card_iAbadia_battery_chip
-entity: sensor.example_battery
-variables: {}

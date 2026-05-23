@@ -1,4 +1,0 @@
-type: custom:ui-lovelace-minimalist-hacs
-template: card_water_heater
-entity: sensor.example
-variables: {}

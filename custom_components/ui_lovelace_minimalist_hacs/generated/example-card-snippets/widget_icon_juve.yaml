@@ -1,4 +1,0 @@
-type: custom:ui-lovelace-minimalist-hacs
-template: widget_icon_juve
-entity: sensor.example
-variables: {}

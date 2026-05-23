@@ -1,4 +1,0 @@
-type: custom:ui-lovelace-minimalist-hacs
-template: generic_text
-entity: sensor.example
-variables: {}

@@ -1,4 +1,0 @@
-type: custom:ui-lovelace-minimalist-hacs
-template: custom_card_imswel_person_findmy_button
-entity: person.example
-variables: {}

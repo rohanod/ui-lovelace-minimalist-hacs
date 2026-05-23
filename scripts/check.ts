@@ -5,11 +5,6 @@ import { join } from "node:path";
 const root = join(import.meta.dir, "..");
 const required = [
   "hacs.json",
-  "custom_components/ui_lovelace_minimalist_hacs/manifest.json",
-  "custom_components/ui_lovelace_minimalist_hacs/__init__.py",
-  "custom_components/ui_lovelace_minimalist_hacs/config_flow.py",
-  "custom_components/ui_lovelace_minimalist_hacs/generated/ui-lovelace-minimalist-hacs.js",
-  "custom_components/ui_lovelace_minimalist_hacs/generated/wrapper-card-examples.yaml",
   "dist/ui-lovelace-minimalist-hacs.js",
   "dist/wrapper-card-examples.yaml",
   "dist/template-index.json",
@@ -21,9 +16,17 @@ for (const file of required) {
   }
 }
 
-const manifest = JSON.parse(await readFile(join(root, "custom_components/ui_lovelace_minimalist_hacs/manifest.json"), "utf8"));
-if (manifest.domain !== "ui_lovelace_minimalist_hacs") {
-  throw new Error(`Unexpected manifest domain: ${manifest.domain}`);
+if (existsSync(join(root, "custom_components"))) {
+  throw new Error("custom_components should not exist in this HACS Dashboard repository");
+}
+
+const hacs = JSON.parse(await readFile(join(root, "hacs.json"), "utf8"));
+if (hacs.name !== "UI Lovelace Minimalist HACS") {
+  throw new Error(`Unexpected HACS name: ${hacs.name}`);
+}
+
+if (hacs.filename !== "ui-lovelace-minimalist-hacs.js") {
+  throw new Error(`Unexpected HACS filename: ${hacs.filename}`);
 }
 
 const templates = await readFile(join(root, "dist/template-index.json"), "utf8");

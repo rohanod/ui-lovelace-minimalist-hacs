@@ -1,4 +1,0 @@
-type: custom:ui-lovelace-minimalist-hacs
-template: custom_card_wsly_pollen_language_variables
-entity: sensor.example
-variables: {}

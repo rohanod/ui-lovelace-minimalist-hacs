@@ -1,4 +1,0 @@
-type: custom:ui-lovelace-minimalist-hacs
-template: card_ps4
-entity: sensor.example
-variables: {}

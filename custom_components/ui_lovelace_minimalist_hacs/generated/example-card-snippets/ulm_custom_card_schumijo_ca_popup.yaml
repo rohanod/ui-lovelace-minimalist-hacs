@@ -1,4 +1,0 @@
-type: custom:ui-lovelace-minimalist-hacs
-template: ulm_custom_card_schumijo_ca_popup
-entity: sensor.example
-variables: {}
