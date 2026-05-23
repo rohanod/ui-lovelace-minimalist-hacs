@@ -54,18 +54,20 @@ const resolveButtonCardConfig = (config, stack = []) => {
   return mergeConfig(resolved, ownConfig);
 };
 
-const resolveNestedButtonCards = (value) => {
-  if (Array.isArray(value)) return value.map(resolveNestedButtonCards);
+const convertNestedButtonCards = (value) => {
+  if (Array.isArray(value)) return value.map(convertNestedButtonCards);
   if (!isObject(value)) return value;
-  let current = value;
-  const templates = asTemplateList(current.template);
-  if (current.type === "custom:button-card" && templates.some(isLiteralTemplateName)) {
-    current = resolveButtonCardConfig(current);
-    current.type = "custom:button-card";
+
+  if (value.type === "custom:button-card" && asTemplateList(value.template).some(isLiteralTemplateName)) {
+    return {
+      ...clone(value),
+      type: "custom:ui-lovelace-minimalist-hacs"
+    };
   }
+
   const resolved = {};
-  for (const [key, nestedValue] of Object.entries(current)) {
-    resolved[key] = resolveNestedButtonCards(nestedValue);
+  for (const [key, nestedValue] of Object.entries(value)) {
+    resolved[key] = convertNestedButtonCards(nestedValue);
   }
   return resolved;
 };
@@ -87,7 +89,7 @@ class UiLovelaceMinimalistHacs extends HTMLElement {
   async renderCard() {
     const root = this.shadowRoot ?? this.attachShadow({ mode: "open" });
     try {
-      const buttonCardConfig = resolveNestedButtonCards(resolveButtonCardConfig({
+      const buttonCardConfig = convertNestedButtonCards(resolveButtonCardConfig({
         ...this.config,
         type: "custom:button-card"
       }));
