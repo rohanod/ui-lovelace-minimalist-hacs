@@ -137,6 +137,8 @@ const asTemplateList = (template) => {
 };
 
 const isLiteralTemplateName = (templateName) => typeof templateName === "string" && !templateName.trim().startsWith("[[[");
+const isTemplateString = (value) => typeof value === "string" && value.trim().startsWith("[[[");
+const isParentEntityTemplate = (value) => isTemplateString(value) && value.includes("entity.entity_id");
 
 const resolveButtonCardConfig = (config, stack = []) => {
   const templates = asTemplateList(config.template);
@@ -156,20 +158,29 @@ const resolveButtonCardConfig = (config, stack = []) => {
   return mergeConfig(resolved, ownConfig);
 };
 
-const convertNestedButtonCards = (value) => {
-  if (Array.isArray(value)) return value.map(convertNestedButtonCards);
+const convertNestedButtonCards = (value, inheritedEntity) => {
+  if (Array.isArray(value)) return value.map((item) => convertNestedButtonCards(item, inheritedEntity));
   if (!isObject(value)) return value;
 
+  const configuredEntity = value.entity ?? value.entity_id;
+  const ownEntity = typeof configuredEntity === "string" && !isTemplateString(configuredEntity)
+    ? configuredEntity
+    : inheritedEntity;
+
   if (value.type === "custom:button-card" && asTemplateList(value.template).some(isLiteralTemplateName)) {
+    const converted = clone(value);
+    if (isParentEntityTemplate(converted.entity) && ownEntity) {
+      converted.entity = ownEntity;
+    }
     return {
-      ...clone(value),
+      ...converted,
       type: "custom:ui-lovelace-minimalist-hacs"
     };
   }
 
   const resolved = {};
   for (const [key, nestedValue] of Object.entries(value)) {
-    resolved[key] = convertNestedButtonCards(nestedValue);
+    resolved[key] = convertNestedButtonCards(nestedValue, ownEntity);
   }
   return resolved;
 };
@@ -191,10 +202,16 @@ class UiLovelaceMinimalistHacs extends HTMLElement {
   async renderCard() {
     const root = this.shadowRoot ?? this.attachShadow({ mode: "open" });
     try {
-      const buttonCardConfig = convertNestedButtonCards(resolveButtonCardConfig({
+      const normalizedConfig = {
         ...this.config,
+        entity: this.config.entity ?? this.config.entity_id
+      };
+      delete normalizedConfig.entity_id;
+      const resolvedConfig = resolveButtonCardConfig({
+        ...normalizedConfig,
         type: "custom:button-card"
-      }));
+      });
+      const buttonCardConfig = convertNestedButtonCards(resolvedConfig, resolvedConfig.entity);
       buttonCardConfig.type = "custom:button-card";
       const helpers = await window.loadCardHelpers();
       const child = helpers.createCardElement(buttonCardConfig);
