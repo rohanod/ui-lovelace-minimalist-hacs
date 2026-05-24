@@ -2274,6 +2274,138 @@
     "directUse": true
   },
   {
+    "name": "ulm_language_variables",
+    "source": "custom_components/ui_lovelace_minimalist/lovelace/translations/cn.yaml",
+    "category": "support",
+    "directUse": false
+  },
+  {
+    "name": "ulm_language_variables",
+    "source": "custom_components/ui_lovelace_minimalist/lovelace/translations/cs.yaml",
+    "category": "support",
+    "directUse": false
+  },
+  {
+    "name": "ulm_language_variables",
+    "source": "custom_components/ui_lovelace_minimalist/lovelace/translations/da.yaml",
+    "category": "support",
+    "directUse": false
+  },
+  {
+    "name": "ulm_language_variables",
+    "source": "custom_components/ui_lovelace_minimalist/lovelace/translations/de.yaml",
+    "category": "support",
+    "directUse": false
+  },
+  {
+    "name": "ulm_language_variables",
+    "source": "custom_components/ui_lovelace_minimalist/lovelace/translations/en.yaml",
+    "category": "support",
+    "directUse": false
+  },
+  {
+    "name": "ulm_language_variables",
+    "source": "custom_components/ui_lovelace_minimalist/lovelace/translations/es.yaml",
+    "category": "support",
+    "directUse": false
+  },
+  {
+    "name": "ulm_language_variables",
+    "source": "custom_components/ui_lovelace_minimalist/lovelace/translations/fi.yaml",
+    "category": "support",
+    "directUse": false
+  },
+  {
+    "name": "ulm_language_variables",
+    "source": "custom_components/ui_lovelace_minimalist/lovelace/translations/fr.yaml",
+    "category": "support",
+    "directUse": false
+  },
+  {
+    "name": "ulm_language_variables",
+    "source": "custom_components/ui_lovelace_minimalist/lovelace/translations/he.yaml",
+    "category": "support",
+    "directUse": false
+  },
+  {
+    "name": "ulm_language_variables",
+    "source": "custom_components/ui_lovelace_minimalist/lovelace/translations/it.yaml",
+    "category": "support",
+    "directUse": false
+  },
+  {
+    "name": "ulm_language_variables",
+    "source": "custom_components/ui_lovelace_minimalist/lovelace/translations/ko-KR.yaml",
+    "category": "support",
+    "directUse": false
+  },
+  {
+    "name": "ulm_language_variables",
+    "source": "custom_components/ui_lovelace_minimalist/lovelace/translations/nl.yaml",
+    "category": "support",
+    "directUse": false
+  },
+  {
+    "name": "ulm_language_variables",
+    "source": "custom_components/ui_lovelace_minimalist/lovelace/translations/no.yaml",
+    "category": "support",
+    "directUse": false
+  },
+  {
+    "name": "ulm_language_variables",
+    "source": "custom_components/ui_lovelace_minimalist/lovelace/translations/pl.yaml",
+    "category": "support",
+    "directUse": false
+  },
+  {
+    "name": "ulm_language_variables",
+    "source": "custom_components/ui_lovelace_minimalist/lovelace/translations/pt-BR.yaml",
+    "category": "support",
+    "directUse": false
+  },
+  {
+    "name": "ulm_language_variables",
+    "source": "custom_components/ui_lovelace_minimalist/lovelace/translations/pt.yaml",
+    "category": "support",
+    "directUse": false
+  },
+  {
+    "name": "ulm_language_variables",
+    "source": "custom_components/ui_lovelace_minimalist/lovelace/translations/ru.yaml",
+    "category": "support",
+    "directUse": false
+  },
+  {
+    "name": "ulm_language_variables",
+    "source": "custom_components/ui_lovelace_minimalist/lovelace/translations/sk.yaml",
+    "category": "support",
+    "directUse": false
+  },
+  {
+    "name": "ulm_language_variables",
+    "source": "custom_components/ui_lovelace_minimalist/lovelace/translations/sv.yaml",
+    "category": "support",
+    "directUse": false
+  },
+  {
+    "name": "ulm_language_variables",
+    "source": "custom_components/ui_lovelace_minimalist/lovelace/translations/tr.yaml",
+    "category": "support",
+    "directUse": false
+  },
+  {
+    "name": "ulm_language_variables",
+    "source": "custom_components/ui_lovelace_minimalist/lovelace/translations/uk.yaml",
+    "category": "support",
+    "directUse": false
+  },
+  {
+    "name": "ulm_language_variables",
+    "source": "custom_components/ui_lovelace_minimalist/lovelace/translations/zh-CN.yaml",
+    "category": "support",
+    "directUse": false
+  },
+  {
     "name": "ulm_translation_engine",
     "source": "custom_components/ui_lovelace_minimalist/lovelace/translations/default.yaml",
     "category": "support",

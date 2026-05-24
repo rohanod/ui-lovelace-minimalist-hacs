@@ -99,6 +99,32 @@ function snippetFor(templateName: string): string {
   ].join("\n");
 }
 
+function makeHomeAssistantResourceLookupsSafe(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((item) => makeHomeAssistantResourceLookupsSafe(item));
+  }
+
+  if (value && typeof value === "object") {
+    const updated: Record<string, unknown> = {};
+    for (const [key, child] of Object.entries(value)) {
+      updated[key] = makeHomeAssistantResourceLookupsSafe(child);
+    }
+    return updated;
+  }
+
+  if (typeof value !== "string") return value;
+
+  return value
+    .replaceAll(
+      "hass.resources[hass['language']]",
+      "((hass.resources && hass.resources[hass['language']]) || (hass.resources && hass.resources.en) || {})",
+    )
+    .replaceAll(
+      "hass.resources[lang]",
+      "((hass.resources && hass.resources[lang]) || (hass.resources && hass.resources.en) || {})",
+    );
+}
+
 function pluginEntrypoint(templateCount: number, templates: Record<string, unknown>): string {
   return `const TEMPLATE_COUNT = ${templateCount};
 const BUTTON_CARD_TEMPLATES = ${JSON.stringify(templates)};
@@ -139,6 +165,7 @@ const asTemplateList = (template) => {
 const isLiteralTemplateName = (templateName) => typeof templateName === "string" && !templateName.trim().startsWith("[[[");
 const isTemplateString = (value) => typeof value === "string" && value.trim().startsWith("[[[");
 const isParentEntityTemplate = (value) => isTemplateString(value) && value.includes("entity.entity_id");
+const languageFromHass = (hass) => hass?.language || hass?.locale?.language || "en";
 
 const resolveButtonCardConfig = (config, stack = []) => {
   const templates = asTemplateList(config.template);
@@ -204,7 +231,11 @@ class UiLovelaceMinimalistHacs extends HTMLElement {
     try {
       const normalizedConfig = {
         ...this.config,
-        entity: this.config.entity ?? this.config.entity_id
+        entity: this.config.entity ?? this.config.entity_id,
+        variables: {
+          ulm_language: languageFromHass(this._hass),
+          ...(isObject(this.config.variables) ? this.config.variables : {})
+        }
       };
       delete normalizedConfig.entity_id;
       const resolvedConfig = resolveButtonCardConfig({
@@ -291,8 +322,10 @@ async function main() {
   const source = await resolveSource();
   try {
     const templateRoot = join(source.path, "custom_components", "ui_lovelace_minimalist", "lovelace", "ulm_templates");
+    const translationRoot = join(source.path, "custom_components", "ui_lovelace_minimalist", "lovelace", "translations");
     const communityRoot = join(source.path, "custom_cards");
     if (!existsSync(templateRoot)) throw new Error(`Missing template root: ${templateRoot}`);
+    if (!existsSync(translationRoot)) throw new Error(`Missing translation root: ${translationRoot}`);
     if (!existsSync(communityRoot)) throw new Error(`Missing community cards root: ${communityRoot}`);
 
     await resetDirectory(distDir);
@@ -300,7 +333,7 @@ async function main() {
     const yamlFiles = [
       ...(await listFiles(templateRoot)),
       join(source.path, "custom_components", "ui_lovelace_minimalist", "lovelace", "custom_actions.yaml"),
-      join(source.path, "custom_components", "ui_lovelace_minimalist", "lovelace", "translations", "default.yaml"),
+      ...(await listFiles(translationRoot)),
       ...(await listFiles(communityRoot)),
     ].filter((file) => file.endsWith(".yaml") || file.endsWith(".yml"));
 
@@ -314,7 +347,7 @@ async function main() {
       const parsed = parse(content) as Record<string, unknown> | null;
       if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) continue;
       for (const [name, value] of Object.entries(parsed)) {
-        templates[name] = value;
+        templates[name] = makeHomeAssistantResourceLookupsSafe(value);
         entries.push({ name, source: rel, category, directUse: isDirectUse(category) });
       }
     }
