@@ -9,7 +9,7 @@ const escapeHtml = (value) => String(value ?? "")
   .replaceAll("'", "&#39;");
 
 const clone = (value) => {
-  if (typeof structuredClone === "function") return structuredClone(value);
+  if (value === undefined) return undefined;
   return JSON.parse(JSON.stringify(value));
 };
 
