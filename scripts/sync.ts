@@ -199,6 +199,9 @@ const convertNestedButtonCards = (value, inheritedEntity) => {
     if (isParentEntityTemplate(converted.entity) && ownEntity) {
       converted.entity = ownEntity;
     }
+    if (!converted.entity && !converted.entity_id && ownEntity) {
+      converted.entity = ownEntity;
+    }
     return {
       ...converted,
       type: "custom:ui-lovelace-minimalist-hacs"
@@ -217,6 +220,8 @@ class UiLovelaceMinimalistHacs extends HTMLElement {
     if (!config || !config.template) {
       throw new Error("Specify a bundled Minimalist template, for example template: card_light");
     }
+    this.style.display ||= "block";
+    this.style.width ||= "100%";
     this.config = config;
     this.renderCard();
   }
