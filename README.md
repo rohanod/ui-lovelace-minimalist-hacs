@@ -31,6 +31,8 @@ HACS may append a cache tag query string to that URL. That is expected.
 
 You still need `custom:button-card` installed, because this wrapper renders button-card after resolving the bundled Minimalist templates.
 
+Some community templates use additional custom cards. For example, `custom_card_mpse_printer` uses `custom:bar-card`, so install `bar-card` from HACS before using that template. The generated `dist/template-index.json` includes a `dependencies` array for each template.
+
 ## Examples
 
 Light:

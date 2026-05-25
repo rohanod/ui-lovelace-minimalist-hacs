@@ -15,6 +15,7 @@ type TemplateEntry = {
   source: string;
   category: string;
   directUse: boolean;
+  dependencies: string[];
 };
 
 function argValue(name: string): string | undefined {
@@ -125,6 +126,28 @@ function makeHomeAssistantResourceLookupsSafe(value: unknown): unknown {
     );
 }
 
+function collectCustomElementDependencies(value: unknown, dependencies = new Set<string>()): string[] {
+  if (Array.isArray(value)) {
+    for (const item of value) collectCustomElementDependencies(item, dependencies);
+    return [...dependencies].sort();
+  }
+
+  if (!value || typeof value !== "object") return [...dependencies].sort();
+
+  const record = value as Record<string, unknown>;
+  if (typeof record.type === "string" && record.type.startsWith("custom:")) {
+    const tag = record.type.slice("custom:".length);
+    if (tag && tag !== "button-card" && tag !== "ui-lovelace-minimalist-hacs") {
+      dependencies.add(tag);
+    }
+  }
+
+  for (const child of Object.values(record)) {
+    collectCustomElementDependencies(child, dependencies);
+  }
+  return [...dependencies].sort();
+}
+
 function pluginEntrypoint(templateCount: number, templates: Record<string, unknown>): string {
   return `const TEMPLATE_COUNT = ${templateCount};
 const BUTTON_CARD_TEMPLATES = ${JSON.stringify(templates)};
@@ -166,6 +189,26 @@ const isLiteralTemplateName = (templateName) => typeof templateName === "string"
 const isTemplateString = (value) => typeof value === "string" && value.trim().startsWith("[[[");
 const isParentEntityTemplate = (value) => isTemplateString(value) && value.includes("entity.entity_id");
 const languageFromHass = (hass) => hass?.language || hass?.locale?.language || "en";
+const customElementTagFromType = (type) => typeof type === "string" && type.startsWith("custom:")
+  ? type.slice("custom:".length)
+  : null;
+
+const findMissingCustomElements = (value, missing = new Set()) => {
+  if (Array.isArray(value)) {
+    for (const item of value) findMissingCustomElements(item, missing);
+    return [...missing].sort();
+  }
+  if (!isObject(value)) return [...missing].sort();
+
+  const tag = customElementTagFromType(value.type);
+  if (tag && tag !== "ui-lovelace-minimalist-hacs" && !customElements.get(tag)) {
+    missing.add(tag);
+  }
+  for (const nestedValue of Object.values(value)) {
+    findMissingCustomElements(nestedValue, missing);
+  }
+  return [...missing].sort();
+};
 
 const resolveButtonCardConfig = (config, stack = []) => {
   const templates = asTemplateList(config.template);
@@ -249,6 +292,10 @@ class UiLovelaceMinimalistHacs extends HTMLElement {
       });
       const buttonCardConfig = convertNestedButtonCards(resolvedConfig, resolvedConfig.entity);
       buttonCardConfig.type = "custom:button-card";
+      const missingElements = findMissingCustomElements(buttonCardConfig);
+      if (missingElements.length) {
+        throw new Error("Missing custom card dependenc" + (missingElements.length === 1 ? "y" : "ies") + ": " + missingElements.map((tag) => "custom:" + tag).join(", ") + ". Install the matching HACS Dashboard card resource(s), then refresh the browser.");
+      }
       const helpers = await window.loadCardHelpers();
       const child = helpers.createCardElement(buttonCardConfig);
       if (this._hass) child.hass = this._hass;
@@ -352,8 +399,9 @@ async function main() {
       const parsed = parse(content) as Record<string, unknown> | null;
       if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) continue;
       for (const [name, value] of Object.entries(parsed)) {
-        templates[name] = makeHomeAssistantResourceLookupsSafe(value);
-        entries.push({ name, source: rel, category, directUse: isDirectUse(category) });
+        const template = makeHomeAssistantResourceLookupsSafe(value);
+        templates[name] = template;
+        entries.push({ name, source: rel, category, directUse: isDirectUse(category), dependencies: collectCustomElementDependencies(template) });
       }
     }
 

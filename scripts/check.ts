@@ -35,4 +35,9 @@ if (!Array.isArray(parsed) || parsed.length < 50) {
   throw new Error("Template index looks incomplete");
 }
 
+const printerTemplate = parsed.find((entry) => entry.name === "custom_card_mpse_printer");
+if (!printerTemplate?.dependencies?.includes("bar-card")) {
+  throw new Error("Template dependency metadata did not include bar-card for custom_card_mpse_printer");
+}
+
 console.log(`OK: ${parsed.length} templates indexed`);
