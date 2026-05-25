@@ -108,6 +108,9 @@ const convertNestedButtonCards = (value, inheritedEntity) => {
       converted.template = [...referencedTemplates, ...literalTemplates];
     }
     const resolved = resolveButtonCardConfig(converted);
+    if (referencedTemplates.length && converted.state === undefined) {
+      delete resolved.state;
+    }
     resolved.type = "custom:button-card";
     return convertNestedButtonCards(resolved, ownEntity);
   }
