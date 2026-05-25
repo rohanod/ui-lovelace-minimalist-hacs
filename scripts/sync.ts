@@ -188,6 +188,12 @@ const asTemplateList = (template) => {
 const isLiteralTemplateName = (templateName) => typeof templateName === "string" && !templateName.trim().startsWith("[[[");
 const isTemplateString = (value) => typeof value === "string" && value.trim().startsWith("[[[");
 const isParentEntityTemplate = (value) => isTemplateString(value) && value.includes("entity.entity_id");
+const referencedTemplatesInString = (value) => {
+  if (!isTemplateString(value) || !value.includes("icon_info")) return [];
+  return [...value.matchAll(/["']([A-Za-z0-9_ -]+)["']/g)]
+    .map((match) => match[1])
+    .filter((templateName, index, names) => BUTTON_CARD_TEMPLATES[templateName] && names.indexOf(templateName) === index);
+};
 const languageFromHass = (hass) => hass?.language || hass?.locale?.language || "en";
 const customElementTagFromType = (type) => typeof type === "string" && type.startsWith("custom:")
   ? type.slice("custom:".length)
@@ -237,13 +243,20 @@ const convertNestedButtonCards = (value, inheritedEntity) => {
     ? configuredEntity
     : inheritedEntity;
 
-  if (value.type === "custom:button-card" && asTemplateList(value.template).some(isLiteralTemplateName)) {
+  const nestedTemplates = asTemplateList(value.template);
+  const literalTemplates = nestedTemplates.filter(isLiteralTemplateName);
+  const referencedTemplates = nestedTemplates.flatMap(referencedTemplatesInString);
+
+  if (value.type === "custom:button-card" && (literalTemplates.length || referencedTemplates.length)) {
     const converted = clone(value);
     if (isParentEntityTemplate(converted.entity) && ownEntity) {
       converted.entity = ownEntity;
     }
     if (!converted.entity && !converted.entity_id && ownEntity) {
       converted.entity = ownEntity;
+    }
+    if (referencedTemplates.length) {
+      converted.template = [...referencedTemplates, ...literalTemplates];
     }
     const resolved = resolveButtonCardConfig(converted);
     resolved.type = "custom:button-card";
