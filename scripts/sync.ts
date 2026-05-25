@@ -245,10 +245,9 @@ const convertNestedButtonCards = (value, inheritedEntity) => {
     if (!converted.entity && !converted.entity_id && ownEntity) {
       converted.entity = ownEntity;
     }
-    return {
-      ...converted,
-      type: "custom:ui-lovelace-minimalist-hacs"
-    };
+    const resolved = resolveButtonCardConfig(converted);
+    resolved.type = "custom:button-card";
+    return convertNestedButtonCards(resolved, ownEntity);
   }
 
   const resolved = {};
