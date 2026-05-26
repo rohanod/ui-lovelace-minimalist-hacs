@@ -67,6 +67,22 @@ variables: {}
 
 More generated examples are in `dist/wrapper-card-examples.yaml`.
 
+## YAML Builder
+
+Run the local static builder to generate paste-ready card YAML:
+
+```bash
+bun run serve:builder
+```
+
+Open:
+
+```text
+http://localhost:4173/site/
+```
+
+The builder loads `dist/template-index.json`, lets you choose one card template, fill an entity and variables, and copy YAML for Home Assistant's manual card editor.
+
 ## Updating From Upstream
 
 ```bash

@@ -1,0 +1,508 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Minimalist YAML Builder</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #101214;
+        --panel: #1a1d20;
+        --panel-2: #22262a;
+        --text: #edf0f3;
+        --muted: #9da6af;
+        --line: #343a40;
+        --accent: #58a6ff;
+        --accent-2: #73daca;
+        --danger: #ff8b8b;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--text);
+      }
+
+      main {
+        display: grid;
+        grid-template-columns: minmax(360px, 0.95fr) minmax(420px, 1.05fr);
+        gap: 20px;
+        width: min(1280px, calc(100vw - 32px));
+        margin: 0 auto;
+        padding: 24px 0;
+      }
+
+      header {
+        grid-column: 1 / -1;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 16px;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 18px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 24px;
+        line-height: 1.2;
+        letter-spacing: 0;
+      }
+
+      .subtle {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      section {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        min-width: 0;
+      }
+
+      .section-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        border-bottom: 1px solid var(--line);
+        padding: 14px 16px;
+      }
+
+      h2 {
+        margin: 0;
+        font-size: 15px;
+        line-height: 1.3;
+        letter-spacing: 0;
+      }
+
+      .content {
+        display: grid;
+        gap: 14px;
+        padding: 16px;
+      }
+
+      label {
+        display: grid;
+        gap: 7px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 650;
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #111417;
+        color: var(--text);
+        font: inherit;
+        font-size: 14px;
+        padding: 10px 11px;
+        outline: none;
+      }
+
+      textarea {
+        min-height: 280px;
+        resize: vertical;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        line-height: 1.45;
+      }
+
+      input:focus,
+      select:focus,
+      textarea:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.18);
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: 1fr 1.35fr 116px 36px;
+        gap: 8px;
+        align-items: end;
+      }
+
+      .buttons {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      button {
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: var(--panel-2);
+        color: var(--text);
+        cursor: pointer;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 700;
+        min-height: 36px;
+        padding: 0 12px;
+      }
+
+      button.primary {
+        border-color: rgba(88, 166, 255, 0.35);
+        background: var(--accent);
+        color: #06101d;
+      }
+
+      button.icon {
+        padding: 0;
+        width: 36px;
+      }
+
+      button:hover {
+        filter: brightness(1.08);
+      }
+
+      .dependency {
+        display: none;
+        border: 1px solid rgba(255, 139, 139, 0.25);
+        border-radius: 6px;
+        background: rgba(255, 139, 139, 0.08);
+        color: #ffd2d2;
+        padding: 10px 12px;
+        font-size: 13px;
+      }
+
+      .dependency.visible {
+        display: block;
+      }
+
+      .output-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .status {
+        min-height: 18px;
+        color: var(--accent-2);
+        font-size: 12px;
+      }
+
+      code {
+        color: var(--accent-2);
+      }
+
+      @media (max-width: 900px) {
+        main {
+          grid-template-columns: 1fr;
+        }
+
+        .row {
+          grid-template-columns: 1fr;
+        }
+
+        button.icon {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <h1>Minimalist YAML Builder</h1>
+          <div class="subtle">Build one paste-ready <code>custom:ui-lovelace-minimalist-hacs</code> card.</div>
+        </div>
+        <div class="subtle" id="template-count">Loading templates...</div>
+      </header>
+
+      <section>
+        <div class="section-head">
+          <h2>Card</h2>
+          <button id="reset" type="button">Reset</button>
+        </div>
+        <div class="content">
+          <label>
+            Template
+            <input id="template" list="templates" placeholder="custom_card_sisimomo_printer" autocomplete="off" />
+            <datalist id="templates"></datalist>
+          </label>
+
+          <label>
+            Entity
+            <input id="entity" placeholder="sensor.hp_printer_status" autocomplete="off" />
+          </label>
+
+          <div class="dependency" id="dependency"></div>
+
+          <div class="section-head" style="margin: 4px -16px 0; border-top: 1px solid var(--line);">
+            <h2>Variables</h2>
+            <button id="add-variable" type="button">Add variable</button>
+          </div>
+
+          <div id="variables"></div>
+
+          <div class="buttons">
+            <button id="printer-preset" type="button">Printer cartridge preset</button>
+            <button id="empty-variable" type="button">Empty variables object</button>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-head">
+          <h2>Paste This YAML</h2>
+          <div class="output-actions">
+            <button id="copy" class="primary" type="button">Copy</button>
+          </div>
+        </div>
+        <div class="content">
+          <textarea id="output" spellcheck="false"></textarea>
+          <div class="status" id="status"></div>
+        </div>
+      </section>
+    </main>
+
+    <script type="module">
+      const state = {
+        templates: [],
+        variables: [],
+      };
+
+      const els = {
+        template: document.querySelector("#template"),
+        templates: document.querySelector("#templates"),
+        entity: document.querySelector("#entity"),
+        dependency: document.querySelector("#dependency"),
+        variables: document.querySelector("#variables"),
+        output: document.querySelector("#output"),
+        status: document.querySelector("#status"),
+        templateCount: document.querySelector("#template-count"),
+      };
+
+      const quoteString = (value) => {
+        if (value === "") return '""';
+        if (/^(true|false|null|~)$/i.test(value)) return JSON.stringify(value);
+        if (/^-?\d+(\.\d+)?$/.test(value)) return JSON.stringify(value);
+        if (/[:#{}\[\],&*?|\-<>=!%@`]/.test(value) || value.trim() !== value) return JSON.stringify(value);
+        return value;
+      };
+
+      const indent = (level) => "  ".repeat(level);
+
+      function yamlPair(key, value, level) {
+        if ((Array.isArray(value) && value.length) || (value && typeof value === "object" && Object.keys(value).length)) {
+          return `${indent(level)}${key}:\n${yamlValue(value, level + 1)}`;
+        }
+        return `${indent(level)}${key}: ${yamlValue(value, level).trimStart()}`;
+      }
+
+      function yamlValue(value, level = 0) {
+        if (Array.isArray(value)) {
+          if (!value.length) return "[]";
+          return value.map((item) => {
+            if (item && typeof item === "object" && !Array.isArray(item)) {
+              const entries = Object.entries(item);
+              if (!entries.length) return `${indent(level)}- {}`;
+              const [first, ...rest] = entries;
+              return [
+                `${indent(level)}- ${first[0]}: ${yamlValue(first[1], level + 1).trimStart()}`,
+                ...rest.map(([key, child]) => yamlPair(key, child, level + 1)),
+              ].join("\n");
+            }
+            return `${indent(level)}- ${yamlValue(item, level + 1).trimStart()}`;
+          }).join("\n");
+        }
+        if (value && typeof value === "object") {
+          const entries = Object.entries(value);
+          if (!entries.length) return "{}";
+          return entries.map(([key, child]) => yamlPair(key, child, level)).join("\n");
+        }
+        if (typeof value === "boolean" || typeof value === "number") return String(value);
+        if (value === null) return "null";
+        return quoteString(String(value));
+      }
+
+      function parseVariableValue(raw, type) {
+        if (type === "boolean") return raw === "true";
+        if (type === "number") return Number(raw);
+        if (type === "json") return JSON.parse(raw || "null");
+        return raw;
+      }
+
+      function renderVariables() {
+        els.variables.replaceChildren();
+        state.variables.forEach((variable, index) => {
+          const row = document.createElement("div");
+          row.className = "row";
+          const keyLabel = document.createElement("label");
+          keyLabel.textContent = "Key";
+          const keyInput = document.createElement("input");
+          keyInput.dataset.field = "key";
+          keyInput.placeholder = "ulm_card_light_enable_slider";
+          keyInput.value = variable.key;
+          keyLabel.append(keyInput);
+
+          const valueLabel = document.createElement("label");
+          valueLabel.textContent = "Value";
+          const valueInput = document.createElement("textarea");
+          valueInput.dataset.field = "value";
+          valueInput.placeholder = "true, text, or JSON";
+          valueInput.value = String(variable.value);
+          valueInput.style.minHeight = variable.type === "json" ? "120px" : "42px";
+          valueLabel.append(valueInput);
+
+          const typeLabel = document.createElement("label");
+          typeLabel.textContent = "Type";
+          const typeSelect = document.createElement("select");
+          typeSelect.dataset.field = "type";
+          for (const type of ["string", "boolean", "number", "json"]) {
+            const option = document.createElement("option");
+            option.value = type;
+            option.textContent = type;
+            typeSelect.append(option);
+          }
+          typeSelect.value = variable.type;
+          typeLabel.append(typeSelect);
+
+          const remove = document.createElement("button");
+          remove.className = "icon";
+          remove.type = "button";
+          remove.title = "Remove";
+          remove.textContent = "x";
+
+          row.append(keyLabel, valueLabel, typeLabel, remove);
+          row.querySelectorAll("input, textarea, select").forEach((input) => {
+            input.addEventListener("input", () => {
+              variable[input.dataset.field] = input.value;
+              if (input.dataset.field === "type") renderVariables();
+              renderYaml();
+            });
+          });
+          remove.addEventListener("click", () => {
+            state.variables.splice(index, 1);
+            renderVariables();
+            renderYaml();
+          });
+          els.variables.append(row);
+        });
+      }
+
+      function selectedTemplate() {
+        return state.templates.find((item) => item.name === els.template.value);
+      }
+
+      function renderDependency() {
+        const template = selectedTemplate();
+        const dependencies = template?.dependencies ?? [];
+        if (!dependencies.length) {
+          els.dependency.classList.remove("visible");
+          els.dependency.textContent = "";
+          return;
+        }
+        els.dependency.classList.add("visible");
+        els.dependency.textContent = `Requires installed custom card resource(s): ${dependencies.map((item) => `custom:${item}`).join(", ")}`;
+      }
+
+      function renderYaml() {
+        renderDependency();
+        const lines = [
+          "type: custom:ui-lovelace-minimalist-hacs",
+          `template: ${quoteString(els.template.value.trim())}`,
+        ];
+        if (els.entity.value.trim()) lines.push(`entity: ${quoteString(els.entity.value.trim())}`);
+
+        const variables = state.variables
+          .map((variable) => ({ ...variable, key: variable.key.trim() }))
+          .filter((variable) => variable.key);
+
+        if (variables.length) {
+          lines.push("variables:");
+          for (const variable of variables) {
+            try {
+              lines.push(yamlPair(variable.key, parseVariableValue(variable.value, variable.type), 1));
+            } catch (error) {
+              lines.push(`  ${variable.key}: ${quoteString(variable.value)}`);
+            }
+          }
+        }
+        els.output.value = `${lines.join("\n")}\n`;
+      }
+
+      function addVariable(key = "", value = "", type = "string") {
+        state.variables.push({ key, value, type });
+        renderVariables();
+        renderYaml();
+      }
+
+      async function loadTemplates() {
+        try {
+          const response = await fetch("../dist/template-index.json");
+          state.templates = (await response.json()).filter((item) => item.directUse);
+          for (const template of state.templates) {
+            const option = document.createElement("option");
+            option.value = template.name;
+            option.label = `${template.category} - ${template.source}`;
+            els.templates.append(option);
+          }
+          els.templateCount.textContent = `${state.templates.length} direct-use templates`;
+        } catch {
+          els.templateCount.textContent = "Template index unavailable";
+        }
+      }
+
+      document.querySelector("#add-variable").addEventListener("click", () => addVariable());
+      document.querySelector("#empty-variable").addEventListener("click", () => {
+        state.variables = [];
+        renderVariables();
+        renderYaml();
+      });
+      document.querySelector("#printer-preset").addEventListener("click", () => {
+        els.template.value = els.template.value || "custom_card_sisimomo_printer";
+        els.entity.value = els.entity.value || "sensor.hp_printer_status";
+        state.variables = [
+          { key: "printer_name", value: "HP LaserJet MFP M28w", type: "string" },
+          {
+            key: "cartridges",
+            type: "json",
+            value: JSON.stringify([
+              { label: "C", entity_id: "sensor.hp_printer_cyan_ink", type: "unicolor", color: "#427EDE" },
+              { label: "M", entity_id: "sensor.hp_printer_magenta_ink", type: "unicolor", color: "#F84B7A" },
+              { label: "Y", entity_id: "sensor.hp_printer_yellow_ink", type: "unicolor", color: "rgba(var(--color-yellow), 1)" },
+              { label: "K", entity_id: "sensor.hp_printer_black_ink", type: "unicolor", color: "black" },
+            ], null, 2),
+          },
+        ];
+        renderVariables();
+        renderYaml();
+      });
+      document.querySelector("#reset").addEventListener("click", () => {
+        els.template.value = "";
+        els.entity.value = "";
+        state.variables = [];
+        renderVariables();
+        renderYaml();
+      });
+      document.querySelector("#copy").addEventListener("click", async () => {
+        await navigator.clipboard.writeText(els.output.value);
+        els.status.textContent = "Copied YAML.";
+        setTimeout(() => {
+          els.status.textContent = "";
+        }, 1600);
+      });
+      els.template.addEventListener("input", renderYaml);
+      els.entity.addEventListener("input", renderYaml);
+
+      await loadTemplates();
+      renderVariables();
+      renderYaml();
+    </script>
+  </body>
+</html>

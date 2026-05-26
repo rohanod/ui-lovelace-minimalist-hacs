@@ -8,6 +8,8 @@ const required = [
   "dist/ui-lovelace-minimalist-hacs.js",
   "dist/wrapper-card-examples.yaml",
   "dist/template-index.json",
+  "site/index.html",
+  "scripts/serve-builder.ts",
 ];
 
 for (const file of required) {
