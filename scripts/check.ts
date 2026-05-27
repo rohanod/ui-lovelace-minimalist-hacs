@@ -8,6 +8,7 @@ const required = [
   "dist/ui-lovelace-minimalist-hacs.js",
   "dist/wrapper-card-examples.yaml",
   "dist/template-index.json",
+  "dist/template-data.json",
   "site/index.html",
   "scripts/serve-builder.ts",
 ];
@@ -40,6 +41,16 @@ if (!Array.isArray(parsed) || parsed.length < 50) {
 const printerTemplate = parsed.find((entry) => entry.name === "custom_card_mpse_printer");
 if (!printerTemplate?.dependencies?.includes("bar-card")) {
   throw new Error("Template dependency metadata did not include bar-card for custom_card_mpse_printer");
+}
+
+const lightTemplate = parsed.find((entry) => entry.name === "card_light");
+if (!lightTemplate?.variables?.some((variable) => variable.name === "ulm_card_light_enable_slider")) {
+  throw new Error("Variable metadata did not include ulm_card_light_enable_slider for card_light");
+}
+
+const templateData = JSON.parse(await readFile(join(root, "dist/template-data.json"), "utf8"));
+if (!templateData.templates?.card_light || !templateData.theme?.["border-radius"]) {
+  throw new Error("Template data looks incomplete");
 }
 
 console.log(`OK: ${parsed.length} templates indexed`);

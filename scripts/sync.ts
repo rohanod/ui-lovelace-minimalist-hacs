@@ -9,6 +9,7 @@ const defaultRepo = "https://github.com/UI-Lovelace-Minimalist/UI.git";
 const distDir = join(repoRoot, "dist");
 const pluginFileName = "ui-lovelace-minimalist-hacs.js";
 const wrapperExamplesFileName = "wrapper-card-examples.yaml";
+const templateDataFileName = "template-data.json";
 
 type TemplateEntry = {
   name: string;
@@ -16,6 +17,47 @@ type TemplateEntry = {
   category: string;
   directUse: boolean;
   dependencies: string[];
+  variables: VariableInfo[];
+};
+
+type VariableInfo = {
+  name: string;
+  default?: string;
+  required?: boolean;
+  notes?: string;
+  source: string;
+};
+
+const minimalistThemeDefaults: Record<string, string> = {
+  "border-radius": "20px",
+  "box-shadow": "0px 2px 4px 0px rgba(0,0,0,0.16)",
+  "color-theme": "51,51,51",
+  "color-red": "245, 68, 54",
+  "color-green": "1, 200, 82",
+  "color-yellow": "255, 145, 1",
+  "color-blue": "61, 90, 254",
+  "color-purple": "102, 31, 255",
+  "color-grey": "187, 187, 187",
+  "color-pink": "233, 30, 99",
+  "color-background-yellow": "250, 250, 250",
+  "color-background-blue": "250, 250, 250",
+  "color-background-green": "250, 250, 250",
+  "color-background-red": "250, 250, 250",
+  "color-background-pink": "250, 250, 250",
+  "color-background-purple": "250, 250, 250",
+  "color-yellow-text": "var(--primary-text-color)",
+  "color-blue-text": "var(--primary-text-color)",
+  "color-green-text": "var(--primary-text-color)",
+  "color-red-text": "var(--primary-text-color)",
+  "color-pink-text": "var(--primary-text-color)",
+  "color-purple-text": "var(--primary-text-color)",
+  "opacity-bg": "1",
+  "google-red": "#F54436",
+  "google-green": "#01C852",
+  "google-yellow": "#FF9101",
+  "google-blue": "#3D5AFE",
+  "google-violet": "#661FFF",
+  "google-grey": "#BBBBBB",
 };
 
 function argValue(name: string): string | undefined {
@@ -146,6 +188,142 @@ function collectCustomElementDependencies(value: unknown, dependencies = new Set
     collectCustomElementDependencies(child, dependencies);
   }
   return [...dependencies].sort();
+}
+
+function cleanMarkdownCell(value: string): string {
+  return value
+    .replace(/<br\s*\/?>/gi, " ")
+    .replace(/<[^>]+>/g, "")
+    .replace(/`/g, "")
+    .replace(/:\w+-(check|close):/g, (match) => match.includes("check") ? "yes" : "no")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function isRequired(value: string | undefined): boolean | undefined {
+  if (!value) return undefined;
+  return /yes|true|required|check/i.test(value) && !/close|no|false/i.test(value);
+}
+
+function parseMarkdownVariableTables(content: string, source: string): VariableInfo[] {
+  const variables: VariableInfo[] = [];
+  const lines = content.split(/\r?\n/);
+  for (let index = 0; index < lines.length - 1; index += 1) {
+    if (!lines[index].trim().startsWith("|") || !lines[index + 1]?.includes("---")) continue;
+    const headers = lines[index].split("|").slice(1, -1).map(cleanMarkdownCell);
+    const variableIndex = headers.findIndex((header) => /variable/i.test(header));
+    if (variableIndex < 0) continue;
+    const defaultIndex = headers.findIndex((header) => /default|example/i.test(header));
+    const requiredIndex = headers.findIndex((header) => /required/i.test(header));
+    const notesIndex = headers.findIndex((header) => /notes|explanation|requirement/i.test(header));
+    let rowIndex = index + 2;
+    while (rowIndex < lines.length && lines[rowIndex].trim().startsWith("|")) {
+      const cells = lines[rowIndex].split("|").slice(1, -1).map(cleanMarkdownCell);
+      const name = cells[variableIndex];
+      if (name && name !== "entity" && /^[A-Za-z0-9_/-]+$/.test(name)) {
+        variables.push({
+          name,
+          default: defaultIndex >= 0 ? cells[defaultIndex] : undefined,
+          required: isRequired(requiredIndex >= 0 ? cells[requiredIndex] : undefined),
+          notes: notesIndex >= 0 ? cells[notesIndex] : undefined,
+          source,
+        });
+      }
+      rowIndex += 1;
+    }
+  }
+  return variables;
+}
+
+function parseHtmlVariableTables(content: string, source: string): VariableInfo[] {
+  const variables: VariableInfo[] = [];
+  for (const tableMatch of content.matchAll(/<table[\s\S]*?<\/table>/gi)) {
+    const rows = [...tableMatch[0].matchAll(/<tr[\s\S]*?<\/tr>/gi)].map((row) =>
+      [...row[0].matchAll(/<t[hd][^>]*>([\s\S]*?)<\/t[hd]>/gi)].map((cell) => cleanMarkdownCell(cell[1] ?? "")),
+    );
+    const headers = rows[0] ?? [];
+    const variableIndex = headers.findIndex((header) => /variable/i.test(header));
+    if (variableIndex < 0) continue;
+    const defaultIndex = headers.findIndex((header) => /default|example/i.test(header));
+    const requiredIndex = headers.findIndex((header) => /required/i.test(header));
+    const notesIndex = headers.findIndex((header) => /notes|explanation|requirement/i.test(header));
+    for (const cells of rows.slice(1)) {
+      const name = cells[variableIndex];
+      if (name && /^[A-Za-z0-9_/-]+$/.test(name)) {
+        variables.push({
+          name,
+          default: defaultIndex >= 0 ? cells[defaultIndex] : undefined,
+          required: isRequired(requiredIndex >= 0 ? cells[requiredIndex] : undefined),
+          notes: notesIndex >= 0 ? cells[notesIndex] : undefined,
+          source,
+        });
+      }
+    }
+  }
+  return variables;
+}
+
+function collectYamlVariables(value: unknown, variables = new Map<string, VariableInfo>()): Map<string, VariableInfo> {
+  if (Array.isArray(value)) {
+    for (const item of value) collectYamlVariables(item, variables);
+    return variables;
+  }
+  if (!value || typeof value !== "object") return variables;
+
+  const record = value as Record<string, unknown>;
+  if (record.variables && typeof record.variables === "object" && !Array.isArray(record.variables)) {
+    for (const [name, defaultValue] of Object.entries(record.variables as Record<string, unknown>)) {
+      if (/^[A-Za-z0-9_]+$/.test(name) && !variables.has(name)) {
+        variables.set(name, {
+          name,
+          default: typeof defaultValue === "string" ? cleanMarkdownCell(defaultValue) : JSON.stringify(defaultValue),
+          source: "template",
+        });
+      }
+    }
+  }
+  for (const child of Object.values(record)) collectYamlVariables(child, variables);
+  return variables;
+}
+
+function mergeVariableInfo(template: unknown, docs: VariableInfo[]): VariableInfo[] {
+  const variables = collectYamlVariables(template);
+  for (const variable of docs) {
+    const existing = variables.get(variable.name);
+    variables.set(variable.name, {
+      ...existing,
+      ...variable,
+      default: variable.default || existing?.default,
+      source: existing ? `${existing.source}, docs` : variable.source,
+    });
+  }
+  return [...variables.values()].sort((a, b) => a.name.localeCompare(b.name));
+}
+
+async function readDocVariables(sourcePath: string): Promise<Map<string, VariableInfo[]>> {
+  const docs = new Map<string, VariableInfo[]>();
+  const roots = [
+    join(sourcePath, "docs", "usage", "cards"),
+    join(sourcePath, "docs", "usage", "custom_cards"),
+    join(sourcePath, "custom_cards"),
+  ].filter(existsSync);
+
+  for (const root of roots) {
+    for (const file of (await listFiles(root)).filter((item) => item.toLowerCase().endsWith(".md"))) {
+      const content = await readFile(file, "utf8");
+      const variables = [
+        ...parseMarkdownVariableTables(content, relative(sourcePath, file).replaceAll("\\", "/")),
+        ...parseHtmlVariableTables(content, relative(sourcePath, file).replaceAll("\\", "/")),
+      ];
+      if (!variables.length) continue;
+      const base = file.split("/").pop()?.replace(/\.md$/i, "");
+      const parent = file.split("/").at(-2);
+      for (const key of new Set([base, parent].filter(Boolean) as string[])) {
+        docs.set(key, [...(docs.get(key) ?? []), ...variables]);
+      }
+    }
+  }
+  return docs;
 }
 
 function pluginEntrypoint(templateCount: number, templates: Record<string, unknown>): string {
@@ -406,6 +584,7 @@ async function main() {
 
     const templates: Record<string, unknown> = {};
     const entries: TemplateEntry[] = [];
+    const docsByTemplate = await readDocVariables(source.path);
     for (const file of yamlFiles) {
       const content = stripDocumentMarker(await readFile(file, "utf8"));
       if (!content.trim()) continue;
@@ -416,12 +595,20 @@ async function main() {
       for (const [name, value] of Object.entries(parsed)) {
         const template = makeHomeAssistantResourceLookupsSafe(value);
         templates[name] = template;
-        entries.push({ name, source: rel, category, directUse: isDirectUse(category), dependencies: collectCustomElementDependencies(template) });
+        entries.push({
+          name,
+          source: rel,
+          category,
+          directUse: isDirectUse(category),
+          dependencies: collectCustomElementDependencies(template),
+          variables: mergeVariableInfo(template, docsByTemplate.get(name) ?? []),
+        });
       }
     }
 
     entries.sort((a, b) => a.name.localeCompare(b.name) || a.source.localeCompare(b.source));
     await writeFile(join(distDir, "template-index.json"), `${JSON.stringify(entries, null, 2)}\n`);
+    await writeFile(join(distDir, templateDataFileName), `${JSON.stringify({ templates, theme: minimalistThemeDefaults }, null, 2)}\n`);
     await writeFile(join(distDir, pluginFileName), pluginEntrypoint(entries.length, templates));
     await writeFile(join(distDir, wrapperExamplesFileName), wrapperCardExamples());
 

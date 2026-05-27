@@ -69,7 +69,7 @@ More generated examples are in `dist/wrapper-card-examples.yaml`.
 
 ## YAML Builder
 
-Run the local static builder to generate paste-ready card YAML:
+Run the local static builder to generate paste-ready standalone card YAML:
 
 ```bash
 bun run serve:builder
@@ -81,7 +81,9 @@ Open:
 http://localhost:4173/site/
 ```
 
-The builder loads `dist/template-index.json`, lets you choose one card template, fill an entity and variables, and copy YAML for Home Assistant's manual card editor.
+The builder loads `dist/template-index.json` and `dist/template-data.json`, lets you choose one card template, fill an entity and variables, and copy YAML for Home Assistant's manual card editor.
+
+The generated YAML is `type: custom:button-card` with the selected Minimalist template resolved inline. It does not require this wrapper card or the full UI Lovelace Minimalist theme to be installed. It still requires `button-card`, plus any functional nested custom cards used by the selected template, such as `bar-card` for printer/bar templates.
 
 ## Updating From Upstream
 
